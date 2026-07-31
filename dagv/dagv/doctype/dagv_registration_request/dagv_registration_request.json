@@ -1,0 +1,97 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:fgv_email",
+ "creation": "2026-07-31 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "full_name",
+  "fgv_email",
+  "personal_email",
+  "phone",
+  "semester",
+  "course",
+  "desired_areas",
+  "status"
+ ],
+ "fields": [
+  {
+   "fieldname": "full_name",
+   "fieldtype": "Data",
+   "label": "Full Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "fgv_email",
+   "fieldtype": "Data",
+   "label": "FGV Email",
+   "options": "Email",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "personal_email",
+   "fieldtype": "Data",
+   "label": "Personal Email",
+   "options": "Email"
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "label": "Phone",
+   "options": "Phone"
+  },
+  {
+   "fieldname": "semester",
+   "fieldtype": "Int",
+   "label": "Semester"
+  },
+  {
+   "fieldname": "course",
+   "fieldtype": "Select",
+   "label": "Course",
+   "options": "Administração de Empresas\nAdministração Pública\nEconomia",
+   "reqd": 1
+  },
+  {
+   "description": "Areas of interest (Phase 1 upgrades this to a picklist of the 15 areas)",
+   "fieldname": "desired_areas",
+   "fieldtype": "Small Text",
+   "label": "Desired Areas"
+  },
+  {
+   "default": "Pending",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Pending\nApproved\nRejected"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-07-31 00:00:00",
+ "modified_by": "Administrator",
+ "module": "DAGV",
+ "name": "DAGV Registration Request",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
