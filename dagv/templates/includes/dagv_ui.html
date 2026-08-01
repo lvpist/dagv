@@ -11,6 +11,7 @@
   --line:rgba(25,34,32,.13); --field:rgba(255,255,255,.75);
   --accent:#8F7A14; --accent-ui:#B69B1A; --accent-ink:#141812; --accent-soft:rgba(182,155,26,.13);
   --danger:#A5402C; --danger-soft:rgba(165,64,44,.12);
+  --ok:#2F7D4F; --ok-soft:rgba(47,125,79,.13);
   --radius:14px; --radius-sm:10px;
   /* one spacing scale — sections and stacks use it, never ad-hoc margins */
   --s1:.4rem; --s2:.7rem; --s3:1rem; --s4:1.5rem; --s5:2.25rem;
@@ -23,16 +24,17 @@
     --line:rgba(255,255,255,.12); --field:rgba(255,255,255,.04);
     --accent:#D9BE3D; --accent-ui:#D9BE3D; --accent-ink:#12150E; --accent-soft:rgba(217,190,61,.14);
     --danger:#DE8067; --danger-soft:rgba(222,128,103,.14);
+    --ok:#59BE85; --ok-soft:rgba(89,190,133,.15);
   }
 }
 :root[data-theme="light"]{color-scheme:light;--bg:#FAFAF8;--glass:rgba(255,255,255,.66);
   --glass-line:rgba(25,34,32,.09);--ink:#191F1D;--ink-2:#666E6A;--ink-3:#8E948F;
   --line:rgba(25,34,32,.13);--field:rgba(255,255,255,.75);--accent:#8F7A14;--accent-ui:#B69B1A;
-  --accent-ink:#141812;--accent-soft:rgba(182,155,26,.13);--danger:#A5402C;--danger-soft:rgba(165,64,44,.12)}
+  --accent-ink:#141812;--accent-soft:rgba(182,155,26,.13);--danger:#A5402C;--danger-soft:rgba(165,64,44,.12);--ok:#2F7D4F;--ok-soft:rgba(47,125,79,.13)}
 :root[data-theme="dark"]{color-scheme:dark;--bg:#0A0C0B;--glass:rgba(255,255,255,.045);
   --glass-line:rgba(255,255,255,.09);--ink:#ECEFEA;--ink-2:#969C96;--ink-3:#6E746E;
   --line:rgba(255,255,255,.12);--field:rgba(255,255,255,.04);--accent:#D9BE3D;--accent-ui:#D9BE3D;
-  --accent-ink:#12150E;--accent-soft:rgba(217,190,61,.14);--danger:#DE8067;--danger-soft:rgba(222,128,103,.14)}
+  --accent-ink:#12150E;--accent-soft:rgba(217,190,61,.14);--danger:#DE8067;--danger-soft:rgba(222,128,103,.14);--ok:#59BE85;--ok-soft:rgba(89,190,133,.15)}
 
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:var(--bg)}
@@ -52,7 +54,7 @@ body::before{content:"";position:fixed;inset:-20% -10% auto -10%;height:55vh;poi
   padding:clamp(1.25rem,4vw,2.5rem) 1.15rem}
 .shell{width:100%;margin-block:auto;display:flex;flex-direction:column;gap:var(--s4)}
 .sec{display:flex;flex-direction:column;gap:var(--s2)}
-.stack{display:flex;flex-direction:column;gap:var(--s3)}
+.stack{display:flex;flex-direction:column;gap:var(--s5)}
 
 /* Header */
 .top{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--s3);flex-wrap:wrap}
@@ -64,31 +66,58 @@ body::before{content:"";position:fixed;inset:-20% -10% auto -10%;height:55vh;poi
 .sub{margin:.2rem 0 0;color:var(--ink-2);font-size:.9rem}
 .wrap h2{font-size:.75rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);margin:0}
 
-/* Buttons. RULE: any :hover that changes background restates its colour, and
-   every filled variant restates colour in its own :hover — otherwise a base
-   .x:hover{color:…} wins the tie and the label goes unreadable. */
-.qbtn,.tab,.b,.tbtn{font-family:inherit;cursor:pointer;transition:background .14s,color .14s,border-color .14s,filter .14s;
-  -webkit-tap-highlight-color:transparent;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
-.qbtn{font-size:.82rem;font-weight:600;color:var(--ink-2);background:var(--field);border:1px solid var(--line);
-  border-radius:999px;padding:.5rem .85rem;gap:.35rem}
-.qbtn:hover{color:var(--ink);background:var(--field);border-color:var(--ink-3)}
-.qbtn.hot,.qbtn.hot:hover{background:var(--accent-ui);border-color:var(--accent-ui);color:var(--accent-ink)}
-.qbtn.hot:hover{filter:brightness(1.07)}
+/* Buttons.
+   HARD RULE: a plain `.x:hover{color:…}` also matches `.x.pri:hover` and wins on
+   source order, which is how filled buttons end up with unreadable labels. So
+   every base :hover is scoped with :not() to the unstyled variant only, and each
+   variant owns both its resting and hover colours. Don't add a bare :hover here. */
+.qbtn,.tab,.b,.tbtn{font-family:inherit;font-weight:550;cursor:pointer;text-decoration:none;
+  display:inline-flex;align-items:center;justify-content:center;gap:.34rem;
+  transition:background .14s,color .14s,border-color .14s;-webkit-tap-highlight-color:transparent}
+.qbtn svg,.tab svg,.b svg,.tbtn svg{width:.9rem;height:.9rem;flex:none}
 
-.tab{font-size:.87rem;font-weight:550;color:var(--ink-2);background:var(--field);border:1px solid var(--line);
-  border-radius:999px;padding:.5rem .9rem;min-height:2.5rem}
-.tab:hover{color:var(--ink);border-color:var(--ink-3)}
-.tab[aria-selected="true"],.tab[aria-selected="true"]:hover{background:var(--accent-ui);
-  border-color:var(--accent-ui);color:var(--accent-ink);font-weight:650}
+.qbtn{font-size:.81rem;font-weight:600;color:var(--ink-2);background:transparent;
+  border:1px solid var(--line);border-radius:999px;padding:.46rem .8rem}
+.qbtn:not(.hot):hover{color:var(--ink);background:var(--field);border-color:var(--ink-3)}
+.qbtn.hot{background:var(--accent-soft);border-color:var(--accent-soft);color:var(--accent)}
+.qbtn.hot:hover{background:var(--accent-ui);border-color:var(--accent-ui);color:var(--accent-ink)}
 
-.b{font-size:.79rem;font-weight:600;border-radius:9px;padding:.45rem .7rem;min-height:2.1rem;
-  border:1px solid var(--line);background:var(--field);color:var(--ink-2)}
-.b:hover{color:var(--ink);border-color:var(--ink-3)}
-.b.pri,.b.pri:hover{background:var(--accent-ui);border-color:var(--accent-ui);color:var(--accent-ink)}
-.b.pri:hover{filter:brightness(1.07)}
-.b.dgr,.b.dgr:hover{color:var(--danger);border-color:var(--danger-soft)}
-.b.dgr:hover{background:var(--danger-soft)}
-.b[disabled]{opacity:.5;cursor:not-allowed}
+.tab{font-size:.85rem;color:var(--ink-2);background:transparent;border:1px solid var(--line);
+  border-radius:999px;padding:.46rem .85rem;min-height:2.35rem}
+.tab:not([aria-selected="true"]):hover{color:var(--ink);background:var(--field);border-color:var(--ink-3)}
+.tab[aria-selected="true"]{background:var(--accent-ui);border-color:var(--accent-ui);
+  color:var(--accent-ink);font-weight:650}
+
+.b{font-size:.78rem;font-weight:600;border-radius:9px;padding:.42rem .68rem;min-height:2rem;
+  border:1px solid var(--line);background:transparent;color:var(--ink-2)}
+.b:not(.pri):not(.dgr):hover{color:var(--ink);background:var(--field);border-color:var(--ink-3)}
+.b.pri{background:var(--accent-soft);border-color:var(--accent-soft);color:var(--accent)}
+.b.pri:hover{background:var(--accent-ui);border-color:var(--accent-ui);color:var(--accent-ink)}
+.b.dgr{color:var(--danger);border-color:var(--danger-soft);background:transparent}
+.b.dgr:hover{background:var(--danger-soft);color:var(--danger);border-color:var(--danger)}
+.b[disabled],.b[disabled]:hover{opacity:.45;cursor:not-allowed;background:transparent;
+  color:var(--ink-3);border-color:var(--line)}
+
+/* compact button used inside cards/tiles */
+.tbtn{font-size:.78rem;border-radius:8px;padding:.4rem .62rem;min-height:1.95rem;
+  border:1px solid var(--line);background:transparent;color:var(--ink-2)}
+.tbtn:not(.pri):not(.out):not(.ok):hover{color:var(--ink);background:var(--field);border-color:var(--ink-3)}
+.tbtn.pri{background:var(--accent-soft);border-color:var(--accent-soft);color:var(--accent)}
+.tbtn.pri:hover{background:var(--accent-ui);border-color:var(--accent-ui);color:var(--accent-ink)}
+.tbtn.out{color:var(--danger);border-color:var(--danger-soft)}
+.tbtn.out:hover{background:var(--danger-soft);color:var(--danger);border-color:var(--danger)}
+.tbtn.ok{color:var(--ok);border-color:var(--ok-soft)}
+.tbtn.ok:hover{background:var(--ok-soft);color:var(--ok);border-color:var(--ok)}
+.tbtn[disabled],.tbtn[disabled]:hover{opacity:.45;cursor:not-allowed;background:transparent;
+  color:var(--ink-3);border-color:var(--line)}
+
+/* full-width primary (form submits) */
+.btn{font-family:inherit;font-size:.97rem;font-weight:650;color:var(--accent-ink);background:var(--accent-ui);
+  border:1px solid var(--accent-ui);border-radius:var(--radius);padding:.86rem 1rem;min-height:2.95rem;
+  width:100%;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
+  transition:filter .14s;-webkit-tap-highlight-color:transparent}
+.btn:hover{filter:brightness(1.07);color:var(--accent-ink);background:var(--accent-ui)}
+.btn[disabled],.btn[disabled]:hover{opacity:.55;cursor:not-allowed;filter:none}
 
 /* Surfaces */
 .panel{background:var(--glass);border:1px solid var(--glass-line);border-radius:16px;

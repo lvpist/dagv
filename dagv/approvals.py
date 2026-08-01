@@ -21,6 +21,7 @@ LEAD_RANKS = ("Diretor", "Vice-Diretor", "Coordenador")
 APPROVED = "Approved"
 REJECTED = "Rejected"
 REQUESTED = "Requested"
+LEAVE_REQUESTED = "Leave Requested"
 
 
 # ---------------------------------------------------------------------------
@@ -63,11 +64,12 @@ def pending_requests():
 
     rows = frappe.get_all(
         "DAGV Membership",
-        filters={"status": REQUESTED, "area": ["in", areas]},
-        fields=["name", "member", "area", "rank", "requested_on"],
+        filters={"status": ["in", (REQUESTED, LEAVE_REQUESTED)], "area": ["in", areas]},
+        fields=["name", "member", "area", "rank", "status", "requested_on"],
         order_by="requested_on desc",
     )
     for row in rows:
+        row["kind"] = "leave" if row["status"] == LEAVE_REQUESTED else "join"
         row["member_name"] = frappe.db.get_value("User", row["member"], "full_name")
         reg = frappe.db.get_value(
             "DAGV Registration Request",
@@ -86,7 +88,11 @@ def decide(membership, approve, notes=None):
     _guard(doc.area)
 
     approve = approve in (True, 1, "1", "true", "True")
-    doc.status = APPROVED if approve else REJECTED
+    if doc.status == LEAVE_REQUESTED:
+        # Approving a leave takes them out; rejecting keeps them in the area.
+        doc.status = "Removed" if approve else APPROVED
+    else:
+        doc.status = APPROVED if approve else REJECTED
     doc.decided_on = frappe.utils.now_datetime()
     doc.decided_by = frappe.session.user
     if notes:
@@ -199,7 +205,7 @@ def my_dashboard():
         m["area"]: m
         for m in frappe.get_all(
             "DAGV Membership",
-            filters={"member": user, "status": ["in", (APPROVED, REQUESTED)]},
+            filters={"member": user, "status": ["in", (APPROVED, REQUESTED, LEAVE_REQUESTED)]},
             fields=["name", "area", "rank", "status"],
         )
     }
@@ -230,16 +236,41 @@ def my_dashboard():
 
 @frappe.whitelist(methods=["POST"])
 def leave_area(area):
-    """A member steps out of an area (revokes workspace + role)."""
+    """Ask to leave an area.
+
+    Leaving is a request, not an instant exit, so the area's diretoria finds out
+    someone is stepping away instead of noticing a silent disappearance. Access
+    stays until they decide.
+    """
     user = frappe.session.user
-    name = frappe.db.exists("DAGV Membership", {"member": user, "area": area})
+    name = frappe.db.exists(
+        "DAGV Membership", {"member": user, "area": area, "status": APPROVED}
+    )
     if not name:
         frappe.throw("Você não faz parte desta área.")
 
     doc = frappe.get_doc("DAGV Membership", name)
-    doc.status = "Removed"
-    doc.decided_on = frappe.utils.now_datetime()
-    doc.decided_by = user
+    doc.status = LEAVE_REQUESTED
+    doc.requested_on = frappe.utils.now_datetime()
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+    return {"ok": True}
+
+
+@frappe.whitelist(methods=["POST"])
+def cancel_request(area):
+    """Undo a pending join or leave request."""
+    user = frappe.session.user
+    name = frappe.db.exists(
+        "DAGV Membership",
+        {"member": user, "area": area, "status": ["in", (REQUESTED, LEAVE_REQUESTED)]},
+    )
+    if not name:
+        frappe.throw("Não há solicitação pendente para esta área.")
+
+    doc = frappe.get_doc("DAGV Membership", name)
+    # A pending leave means they're still in; a pending join means they never were.
+    doc.status = APPROVED if doc.status == LEAVE_REQUESTED else "Rejected"
     doc.save(ignore_permissions=True)
     frappe.db.commit()
     return {"ok": True}

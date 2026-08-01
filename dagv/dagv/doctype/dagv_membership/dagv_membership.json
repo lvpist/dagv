@@ -51,7 +51,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Situação",
-   "options": "Requested\nApproved\nRejected\nRemoved"
+   "options": "Requested\nApproved\nRejected\nRemoved\nLeave Requested"
   },
   {
    "fieldname": "decision_section",

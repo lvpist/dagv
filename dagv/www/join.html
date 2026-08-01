@@ -7,216 +7,65 @@
 {% endblock %}
 
 {% block style %}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+{% include "dagv/templates/includes/dagv_ui.html" %}
 <style>
-:root{
-  color-scheme:light;
-  --bg:#FAFAF8; --bg-2:#F1F1EE;
-  --glass:rgba(255,255,255,.66); --glass-line:rgba(25,34,32,.09);
-  --ink:#191F1D; --ink-2:#666E6A; --ink-3:#8E948F;
-  --line:rgba(25,34,32,.13); --line-2:rgba(25,34,32,.07);
-  --field:rgba(255,255,255,.75);
-  --accent:#8F7A14; --accent-ui:#B69B1A; --accent-ink:#141812;
-  --accent-soft:rgba(182,155,26,.13);
-  --danger:#A5402C;
-  --radius:14px;
-}
-@media (prefers-color-scheme:dark){
-  :root{
-    color-scheme:dark;
-    --bg:#0A0C0B; --bg-2:#111413;
-    --glass:rgba(255,255,255,.045); --glass-line:rgba(255,255,255,.09);
-    --ink:#ECEFEA; --ink-2:#969C96; --ink-3:#6E746E;
-    --line:rgba(255,255,255,.12); --line-2:rgba(255,255,255,.07);
-    --field:rgba(255,255,255,.04);
-    --accent:#D9BE3D; --accent-ui:#D9BE3D; --accent-ink:#12150E;
-    --accent-soft:rgba(217,190,61,.14);
-    --danger:#DE8067;
-  }
-}
-:root[data-theme="light"]{
-  color-scheme:light;
-  --bg:#FAFAF8; --bg-2:#F1F1EE; --glass:rgba(255,255,255,.66); --glass-line:rgba(25,34,32,.09);
-  --ink:#191F1D; --ink-2:#666E6A; --ink-3:#8E948F; --line:rgba(25,34,32,.13); --line-2:rgba(25,34,32,.07);
-  --field:rgba(255,255,255,.75); --accent:#8F7A14; --accent-ui:#B69B1A; --accent-ink:#141812;
-  --accent-soft:rgba(182,155,26,.13); --danger:#A5402C;
-}
-:root[data-theme="dark"]{
-  color-scheme:dark;
-  --bg:#0A0C0B; --bg-2:#111413; --glass:rgba(255,255,255,.045); --glass-line:rgba(255,255,255,.09);
-  --ink:#ECEFEA; --ink-2:#969C96; --ink-3:#6E746E; --line:rgba(255,255,255,.12); --line-2:rgba(255,255,255,.07);
-  --field:rgba(255,255,255,.04); --accent:#D9BE3D; --accent-ui:#D9BE3D; --accent-ink:#12150E;
-  --accent-soft:rgba(217,190,61,.14); --danger:#DE8067;
-}
-
-*{box-sizing:border-box}
-html,body{margin:0;padding:0;background:var(--bg)}
-
-/* Frappe's website CSS ships Bootstrap, which restyles a/button/select on
-   hover & focus and would otherwise repaint our text mid-interaction (yellow
-   link turning black, invisible in dark mode). Pin our own colours across
-   every state, and let native popups follow the theme via color-scheme. */
-.wrap a,.wrap a:link,.wrap a:visited,.wrap a:hover,.wrap a:active,.wrap a:focus,
-.sheet a,.sheet a:hover,.sheet a:focus{color:var(--accent);text-decoration-color:var(--accent-soft)}
-.sheet a:hover,.wrap a:hover{text-decoration-color:var(--accent)}
-.wrap button,.sheet button{color:inherit}
-.wrap .btn,.wrap .btn:hover,.wrap .btn:focus,.wrap .btn:active,
-.sheet .btn,.sheet .btn:hover,.sheet .btn:focus,.sheet .btn:active{
-  color:var(--accent-ink);background:var(--accent-ui);border:none}
-.wrap .chip[aria-pressed="true"],.wrap .chip[aria-pressed="true"]:hover{
-  color:var(--accent-ink);background:var(--accent-ui)}
-.wrap .info:hover,.wrap .info:focus{color:var(--accent)}
-/* native <select> popup: OS-rendered, so it needs explicit colours */
-.wrap select option{background-color:var(--bg);color:var(--ink)}
-body{
-  font-family:"Geist","Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;
-  min-height:100dvh;position:relative;overflow-x:hidden;
-}
-/* ambient blurred field */
-body::before{
-  content:"";position:fixed;inset:-20% -10% auto -10%;height:60vh;pointer-events:none;z-index:0;
-  background:
-    radial-gradient(46% 60% at 78% 12%,var(--accent-soft),transparent 70%),
-    radial-gradient(40% 50% at 12% 0%,var(--bg-2),transparent 72%);
-  filter:blur(46px);
-}
-/* NOTE: vertical centering via `margin-block:auto`, never `justify-content:center` —
-   with centering, content taller than the viewport gets clipped at the top and
-   becomes unreachable by scrolling. Auto margins collapse to 0 instead. */
-.wrap{position:relative;z-index:1;min-height:100dvh;display:flex;flex-direction:column;
-  align-items:center;padding:clamp(1.25rem,4vw,2.5rem) 1.15rem}
-.shell{width:100%;max-width:27.5rem;margin-block:auto;display:flex;flex-direction:column;gap:1.4rem}
-
-/* header */
-.top{display:flex;flex-direction:column;gap:.55rem;padding-left:.15rem}
-/* `.mark` is a Bootstrap class (highlighter background) — namespaced instead. */
-.dagv-mark{display:flex;align-items:center;gap:.55rem;background:none}
-.dagv-mark .sq{width:.62rem;height:.62rem;border-radius:2px;background:var(--accent-ui);transform:rotate(45deg)}
-.dagv-mark .nm{font-size:.7rem;font-weight:600;letter-spacing:.19em;text-transform:uppercase;color:var(--ink-2)}
-/* Frappe styles bare h1/h2 — set our colour explicitly or it renders near-black. */
-.wrap h1{font-size:1.6rem;font-weight:600;letter-spacing:-.022em;margin:.15rem 0 0;line-height:1.15;
-  text-wrap:balance;color:var(--ink)}
-.sub{margin:0;color:var(--ink-2);font-size:.9rem}
-
-/* card */
-.card{
-  width:100%;background:var(--glass);border:1px solid var(--glass-line);border-radius:20px;
-  backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4);
-  padding:clamp(1.15rem,4vw,1.6rem);
-}
-form{display:flex;flex-direction:column;gap:1.05rem;min-width:0}
-.f{display:flex;flex-direction:column;gap:.4rem;min-width:0;width:100%}
-label,.lb{font-size:.735rem;font-weight:600;letter-spacing:.055em;text-transform:uppercase;color:var(--ink-2)}
+.shell{max-width:27.5rem}
+form{display:flex;flex-direction:column;gap:var(--s3)}
+.f{display:flex;flex-direction:column;gap:.36rem;min-width:0;width:100%}
+.f label{font-size:.72rem;font-weight:600;letter-spacing:.055em;text-transform:uppercase;color:var(--ink-2)}
 .req{color:var(--accent-ui)}
-input,select{
-  font-family:inherit;font-size:1rem;font-weight:450;color:var(--ink);background:var(--field);
-  border:1px solid var(--line);border-radius:var(--radius);padding:.78rem .9rem;width:100%;
-  transition:border-color .16s,box-shadow .16s,background .16s;-webkit-appearance:none;appearance:none;
-}
-input::placeholder{color:var(--ink-3)}
-input:focus,select:focus{outline:none;border-color:var(--accent-ui);box-shadow:0 0 0 3.5px var(--accent-soft)}
-select{
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238E948F' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:right .85rem center;padding-right:2.4rem;cursor:pointer;
-}
-.hint{font-size:.75rem;color:var(--ink-3);letter-spacing:-.005em}
-
+.pair,.row{display:grid;gap:var(--s3);grid-template-columns:1fr;width:100%;min-width:0}
+@media (min-width:380px){.pair.split,.row.split{grid-template-columns:1fr 1fr;gap:var(--s2)}}
+#turmaf{display:none;min-width:0}
+#turmaf.on{display:flex}
+.card{width:100%;background:var(--glass);border:1px solid var(--glass-line);border-radius:18px;
+  backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4);
+  padding:clamp(1.1rem,4vw,1.5rem)}
 /* phone: country toggle fused to the left of the field */
 .phonebox{display:flex;min-width:0}
-.ccbtn{font-family:inherit;font-size:.95rem;font-weight:550;color:var(--ink);background:var(--field);
-  border:1px solid var(--line);border-right:none;border-radius:var(--radius) 0 0 var(--radius);
-  padding:.78rem .7rem;cursor:pointer;display:flex;align-items:center;gap:.34rem;white-space:nowrap;
-  transition:border-color .16s,background .16s;-webkit-tap-highlight-color:transparent}
-.ccbtn:hover{background:var(--accent-soft)}
-.ccbtn:focus-visible{outline:none;box-shadow:0 0 0 3.5px var(--accent-soft);position:relative;z-index:1}
-.ccbtn .dial{font-size:.85rem;color:var(--ink-2);font-variant-numeric:tabular-nums}
-.phonebox input{border-radius:0 var(--radius) var(--radius) 0;min-width:0}
-/* NOTE: never name these `.row`/`.col` — Frappe's website CSS ships Bootstrap,
-   whose `.row` has `margin: 0 -15px` and silently drags the field out of the
-   card's padding. Keep custom class names out of Bootstrap's namespace. */
-.pair{display:grid;gap:1.05rem;grid-template-columns:1fr;width:100%;min-width:0;margin:0}
-@media (min-width:380px){.pair.split{grid-template-columns:1fr 1fr;gap:.7rem}}
-#turmaf{display:none;min-width:0}
-#turmaf.on{display:flex;animation:fade .28s ease}
-@keyframes fade{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
-
-/* chips */
-.chead{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}
-.info{
-  width:1.15rem;height:1.15rem;flex:none;border-radius:50%;border:1px solid var(--line);
-  background:var(--field);color:var(--ink-3);font-family:inherit;font-size:.68rem;font-weight:700;
-  line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
-  transition:all .14s;-webkit-tap-highlight-color:transparent
-}
-.info:hover{color:var(--accent);border-color:var(--accent-ui);background:var(--accent-soft)}
-.info:focus-visible{outline:none;box-shadow:0 0 0 3.5px var(--accent-soft)}
-.cnt{margin-left:auto;font-size:.735rem;font-weight:600;color:var(--ink-3);font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.ccbtn{font-family:inherit;font-size:.93rem;font-weight:550;color:var(--ink);background:var(--field);
+  border:1px solid var(--line);border-right:none;border-radius:var(--radius-sm) 0 0 var(--radius-sm);
+  padding:.6rem .68rem;cursor:pointer;display:flex;align-items:center;gap:.32rem;white-space:nowrap;transition:all .14s}
+.ccbtn:hover{background:var(--accent-soft);color:var(--ink)}
+.ccbtn .dial{font-size:.82rem;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.phonebox input{border-radius:0 var(--radius-sm) var(--radius-sm) 0;min-width:0}
+/* area chips */
+.chead{display:flex;align-items:baseline;justify-content:space-between;gap:.7rem;flex-wrap:wrap}
+.cnt{font-size:.73rem;font-weight:600;color:var(--ink-3);font-variant-numeric:tabular-nums}
 .cnt.ok{color:var(--accent)}
-.chips{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center}
-.chip{
-  font-family:inherit;font-size:.855rem;font-weight:500;color:var(--ink-2);cursor:pointer;
-  background:var(--field);border:1px solid var(--line);border-radius:999px;padding:.5rem .8rem;
-  min-height:2.3rem;transition:all .14s;user-select:none;-webkit-tap-highlight-color:transparent
-}
-.chip:hover{color:var(--ink);border-color:var(--ink-3)}
+.chips{display:flex;flex-wrap:wrap;gap:.36rem;justify-content:center}
+.chip{font-family:inherit;font-size:.845rem;font-weight:500;color:var(--ink-2);cursor:pointer;
+  background:transparent;border:1px solid var(--line);border-radius:999px;padding:.45rem .75rem;
+  min-height:2.2rem;transition:all .14s;-webkit-tap-highlight-color:transparent}
+.chip:not([aria-pressed="true"]):hover{color:var(--ink);background:var(--field);border-color:var(--ink-3)}
 .chip[aria-pressed="true"]{background:var(--accent-ui);border-color:var(--accent-ui);color:var(--accent-ink);font-weight:600}
-.chip:focus-visible{outline:none;box-shadow:0 0 0 3.5px var(--accent-soft)}
-/* submit */
-.btn{
-  font-family:inherit;font-size:.985rem;font-weight:650;color:var(--accent-ink);background:var(--accent-ui);
-  border:none;border-radius:var(--radius);padding:.92rem 1rem;min-height:3rem;cursor:pointer;margin-top:.15rem;
-  display:flex;align-items:center;justify-content:center;gap:.5rem;transition:filter .15s,transform .06s;
-  -webkit-tap-highlight-color:transparent
-}
-.btn:hover{filter:brightness(1.07)}
-.btn:active{transform:translateY(1px)}
-.btn:disabled{opacity:.55;cursor:not-allowed}
-.btn:focus-visible{outline:none;box-shadow:0 0 0 3.5px var(--accent-soft)}
-.sp{width:.95rem;height:.95rem;border:2px solid color-mix(in srgb,var(--accent-ink) 35%,transparent);
-  border-top-color:var(--accent-ink);border-radius:50%;animation:spin .7s linear infinite;display:none}
-.btn.load .sp{display:block}
-@keyframes spin{to{transform:rotate(360deg)}}
-.err{font-size:.8rem;color:var(--danger);font-weight:550;min-height:.9rem;letter-spacing:-.005em}
-.foot{font-size:.735rem;color:var(--ink-3);text-align:center;line-height:1.55;margin:0}
-
+.infob{width:1.45rem;height:1.45rem;min-height:0;padding:0;border-radius:50%;font-size:.76rem;font-weight:700;
+  border:1px solid var(--line);background:transparent;color:var(--ink-3);cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;transition:all .14s}
+.infob:hover{color:var(--accent);border-color:var(--accent-soft);background:var(--accent-soft)}
+.err{font-size:.8rem;color:var(--danger);font-weight:550;min-height:.9rem}
+.formnote{font-size:.73rem;color:var(--ink-3);text-align:center;line-height:1.55;margin:0}
 /* success */
-.done{display:none;flex-direction:column;align-items:center;text-align:center;gap:.85rem;padding:2rem .5rem}
+.done{display:none;flex-direction:column;align-items:center;text-align:center;gap:.8rem;padding:2rem .5rem}
 .done.on{display:flex;animation:up .45s cubic-bezier(.2,.7,.3,1)}
 @keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .tick{width:3rem;height:3rem;border-radius:50%;background:var(--accent-soft);color:var(--accent);
-  display:flex;align-items:center;justify-content:center;border:1px solid var(--accent-soft)}
-.done h2{font-size:1.25rem;font-weight:600;letter-spacing:-.02em;margin:0;color:var(--ink)}
-.done p{margin:0;color:var(--ink-2);font-size:.9rem;max-width:30ch}
-.mailtag{font-size:.8rem;font-weight:550;color:var(--accent);background:var(--accent-soft);
-  padding:.4rem .75rem;border-radius:999px;margin-top:.2rem;word-break:break-all}
-
-/* areas info panel */
+  display:flex;align-items:center;justify-content:center}
+.done h2{font-size:1.22rem;font-weight:600;letter-spacing:-.02em;margin:0;color:var(--ink);text-transform:none;letter-spacing:-.02em}
+.done p{margin:0;color:var(--ink-2);font-size:.89rem;max-width:30ch}
+.mailtag{font-size:.79rem;font-weight:550;color:var(--accent);background:var(--accent-soft);
+  padding:.38rem .72rem;border-radius:999px;margin-top:.15rem;overflow-wrap:anywhere}
+/* areas sheet */
 .sheet{position:fixed;inset:0;z-index:50;display:none;align-items:flex-end;justify-content:center}
 .sheet.on{display:flex}
 .sheet .veil{position:absolute;inset:0;background:rgba(10,12,11,.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .sheet .body{position:relative;background:var(--bg);border:1px solid var(--glass-line);
-  border-radius:18px 18px 0 0;padding:1.4rem 1.25rem calc(1.4rem + env(safe-area-inset-bottom));
+  border-radius:18px 18px 0 0;padding:1.35rem 1.2rem calc(1.35rem + env(safe-area-inset-bottom));
   width:100%;max-width:27.5rem;animation:slide .3s cubic-bezier(.2,.7,.3,1)}
 @keyframes slide{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
-.sheet p{margin:0 0 1.15rem;color:var(--ink-2);font-size:.925rem;line-height:1.6}
-.sheetlink{color:var(--accent);font-weight:550;text-decoration:underline;
-  text-underline-offset:2.5px;text-decoration-color:var(--accent-soft)}
-.sheetlink:hover{text-decoration-color:var(--accent)}
-@media (min-width:640px){.sheet{align-items:center}.sheet .body{border-radius:18px;padding-bottom:1.4rem}}
-
-/* comfortable touch targets on phones (44px) */
-@media (max-width:640px){
-  .chip{min-height:2.75rem;padding:.6rem .85rem}
-  .info{width:1.5rem;height:1.5rem;font-size:.75rem}
-}
-@media (max-width:400px){
-  h1{font-size:1.42rem}
-  .chip{font-size:.82rem;padding:.6rem .72rem}
-}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.sheet p{margin:0 0 1.1rem;color:var(--ink-2);font-size:.92rem;line-height:1.6}
+.sheetlink{color:var(--accent);font-weight:550;text-decoration:underline;text-underline-offset:2.5px}
+@media (min-width:640px){.sheet{align-items:center}.sheet .body{border-radius:18px;padding-bottom:1.35rem}}
 </style>
 {% endblock %}
 
@@ -297,7 +146,7 @@ select{
 
         <div class="f">
           <div class="chead">
-            <span class="lb">Áreas de interesse <span class="req">*</span></span>
+            <span class="lb">Áreas de interesse <span class="req">*</span> <button type="button" class="infob" id="areasbtn" title="Não conhece as áreas?" aria-label="Não conhece as áreas?">?</button></span>
             <button type="button" class="info" id="areasbtn" aria-label="Não conhece as áreas?" title="Não conhece as áreas?">?</button>
             <span class="cnt" id="cnt">0 de 3</span>
           </div>
@@ -317,6 +166,10 @@ select{
         <p>Você receberá a confirmação assim que seu acesso à área interna for liberado.</p>
         <span class="mailtag" id="donemail"></span>
       </div>
+  <footer class="dagv-foot" style="max-width:27.5rem;margin:var(--s5) auto 0">
+    <p>Diretório Acadêmico Getúlio Vargas</p>
+    <nav><a href="/painel">Já sou membro</a></nav>
+  </footer>
     </div>
   </div>
 </div>

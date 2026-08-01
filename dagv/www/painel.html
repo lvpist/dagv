@@ -10,23 +10,26 @@
 {% include "dagv/templates/includes/dagv_ui.html" %}
 <style>
 .shell{max-width:46rem}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(13rem,1fr));gap:var(--s2)}
-.tile{background:var(--glass);border:1px solid var(--glass-line);border-radius:16px;padding:.95rem;
-  backdrop-filter:blur(20px) saturate(1.3);-webkit-backdrop-filter:blur(20px) saturate(1.3);
-  display:flex;flex-direction:column;gap:var(--s1);min-width:0}
-.tile.in{border-color:var(--accent-soft);background:linear-gradient(180deg,var(--accent-soft),transparent 62%),var(--glass)}
-.tname{font-size:.98rem;font-weight:600;letter-spacing:-.012em;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
-.tdesc{font-size:.79rem;color:var(--ink-3);margin:0}
-.trow{display:flex;gap:.4rem;margin-top:auto;padding-top:.35rem;flex-wrap:wrap}
-.tbtn{font-size:.8rem;font-weight:600;border-radius:9px;padding:.45rem .7rem;min-height:2.1rem;
-  border:1px solid var(--line);background:var(--field);color:var(--ink-2)}
-.tbtn:hover{color:var(--ink);border-color:var(--ink-3)}
-.tbtn.pri,.tbtn.pri:hover{background:var(--accent-ui);border-color:var(--accent-ui);color:var(--accent-ink)}
-.tbtn.pri:hover{filter:brightness(1.07)}
-.tbtn.out,.tbtn.out:hover{color:var(--danger);border-color:var(--danger-soft)}
-.tbtn.out:hover{background:var(--danger-soft)}
-.tbtn[disabled]{opacity:.5;cursor:not-allowed}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(12.5rem,1fr));gap:var(--s2)}
+.tile{position:relative;background:var(--glass);border:1px solid var(--glass-line);border-radius:14px;
+  padding:.85rem .9rem;backdrop-filter:blur(20px) saturate(1.3);-webkit-backdrop-filter:blur(20px) saturate(1.3);
+  display:flex;flex-direction:column;gap:.45rem;min-width:0}
+.tile.in{border-color:var(--accent-soft);background:linear-gradient(180deg,var(--accent-soft),transparent 55%),var(--glass)}
+.tile.p-join{border-color:var(--ok-soft);background:linear-gradient(180deg,var(--ok-soft),transparent 55%),var(--glass)}
+.tile.p-leave{border-color:var(--danger-soft);background:linear-gradient(180deg,var(--danger-soft),transparent 55%),var(--glass)}
+.tname{font-size:.93rem;font-weight:600;letter-spacing:-.012em;display:flex;align-items:center;
+  gap:.4rem;flex-wrap:wrap;padding-right:1.4rem}
+.tsub{font-size:.705rem;color:var(--ink-3);margin:-.3rem 0 0;line-height:1.32}
+.trow{display:flex;gap:.35rem;align-items:center;margin-top:auto;padding-top:.4rem;flex-wrap:wrap}
 .tag.wait{background:var(--field);color:var(--ink-3);border:1px solid var(--line)}
+.tag.join{background:var(--ok-soft);color:var(--ok)}
+.tag.leave{background:var(--danger-soft);color:var(--danger)}
+.iconb{margin-left:auto;padding:.4rem;width:1.95rem;min-height:1.95rem;flex:none}
+.xbtn{position:absolute;top:.5rem;right:.5rem;width:1.5rem;height:1.5rem;min-height:0;padding:0;flex:none;
+  border-radius:50%;border:1px solid var(--line);background:var(--field);color:var(--ink-3);
+  font-size:.9rem;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:all .14s}
+.xbtn:hover{color:var(--danger);border-color:var(--danger-soft);background:var(--danger-soft)}
 </style>
 {% endblock %}
 
@@ -83,7 +86,7 @@
     var first=(d.full_name||"").split(" ")[0];
     $("hi").textContent = first ? ("Olá, "+first) : "Painel";
     var mine=d.areas.filter(function(a){return a.state==="Approved"});
-    var wait=d.areas.filter(function(a){return a.state==="Requested"});
+    var wait=d.areas.filter(function(a){return a.state==="Requested"||a.state==="Leave Requested"});
     var rest=d.areas.filter(function(a){return !a.state});
     $("subtitle").textContent = mine.length
       ? ("Você atua em "+mine.length+(mine.length===1?" área":" áreas")+(d.course?" · "+d.course:""))
@@ -93,8 +96,8 @@
     $("quick").innerHTML = d.can_approve ? '<a class="qbtn hot" href="/aprovacoes">Aprovações</a>' : "";
 
     var h="";
+    if(wait.length) h+=sec("Pendentes", grid(wait));
     h+=sec("Minhas áreas", mine.length?grid(mine):'<div class="empty">Você ainda não faz parte de nenhuma área.</div>');
-    if(wait.length) h+=sec("Aguardando aprovação", grid(wait));
     h+=sec("Outras áreas", rest.length?grid(rest):'<div class="empty">Você já participa de todas as áreas ativas.</div>');
     $("body").innerHTML='<div class="stack">'+h+'</div>';
     wire();
@@ -102,24 +105,41 @@
   function sec(t,inner){ return '<section class="sec"><h2>'+esc(t)+'</h2>'+inner+'</section>'; }
   function grid(list){ return '<div class="grid">'+list.map(tile).join("")+'</div>'; }
 
+  function ico(d){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '+
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>'; }
+  var TRASH=ico('<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>');
+  var PLUS =ico('<path d="M12 5v14M5 12h14"/>');
+  var CHAT =ico('<path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.9-.9L3 21l1.9-4.1A8.4 8.4 0 0 1 4 11.5a8.5 8.5 0 0 1 17 0z"/>');
+
   function tile(a){
+    var leaving = a.state==="Leave Requested";
+    var joining = a.state==="Requested";
+    var cls = a.state==="Approved" ? " in" : joining ? " p-join" : leaving ? " p-leave" : "";
     var tag = a.state==="Approved" ? '<span class="tag">'+esc(a.rank||"Membro")+'</span>'
-            : a.state==="Requested" ? '<span class="tag wait">pendente</span>' : "";
-    // Descriptions only where the name is an acronym that needs explaining
-    // (the academic VPs) — everywhere else the name already says it.
-    var needsDesc = !!a.required_course;
+            : joining  ? '<span class="tag join">entrando</span>'
+            : leaving  ? '<span class="tag leave">saindo</span>' : "";
+    // Acronym names get their spelled-out version underneath; everywhere else
+    // the name already says it. The seed keeps the full name before the dash.
+    var longName = a.required_course && a.description
+      ? a.description.split("—")[0].trim() : "";
+
     var acts="";
     if(a.state==="Approved"){
-      acts+='<a class="tbtn pri" href="/raven">Abrir chat</a>'+
-            '<button class="tbtn out" data-leave="'+esc(a.name)+'">Sair</button>';
-    }else if(a.state==="Requested"){
-      acts+='<button class="tbtn" disabled>Aguardando diretoria</button>';
+      acts+='<a class="tbtn pri" href="/raven">'+CHAT+'Abrir chat</a>'+
+            '<button class="tbtn out iconb" data-leave="'+esc(a.name)+'" '+
+            'title="Solicitar saída da área" aria-label="Solicitar saída da área">'+TRASH+'</button>';
+    }else if(joining || leaving){
+      acts+='<span class="hint">'+(leaving?"Saída aguardando diretoria":"Aguardando diretoria")+'</span>';
     }else{
-      acts+='<button class="tbtn pri" data-join="'+esc(a.name)+'">Solicitar entrada</button>';
+      acts+='<button class="tbtn pri" data-join="'+esc(a.name)+'">'+PLUS+'Solicitar entrada</button>';
     }
-    return '<article class="tile'+(a.state==="Approved"?" in":"")+'">'+
+    // Pending tiles get a corner × so a mistaken request can be undone.
+    var x = (joining||leaving)
+      ? '<button class="xbtn" data-cancel="'+esc(a.name)+'" title="Cancelar solicitação" '+
+        'aria-label="Cancelar solicitação">×</button>' : "";
+    return '<article class="tile'+cls+'">'+x+
       '<div class="tname">'+esc(a.name)+tag+'</div>'+
-      (needsDesc&&a.description?'<p class="tdesc">'+esc(a.description)+'</p>':'')+
+      (longName?'<p class="tsub">'+esc(longName)+'</p>':'')+
       '<div class="trow">'+acts+'</div></article>';
   }
 
@@ -132,12 +152,20 @@
           .catch(function(e){ toast(e); b.disabled=false; b.textContent="Solicitar entrada"; });
       };
     });
+    document.querySelectorAll("[data-cancel]").forEach(function(b){
+      b.onclick=function(){
+        b.disabled=true;
+        call("dagv.approvals.cancel_request",{area:b.dataset.cancel})
+          .then(function(){ toast("Solicitação cancelada"); load(); })
+          .catch(function(e){ toast(e); b.disabled=false; });
+      };
+    });
     document.querySelectorAll("[data-leave]").forEach(function(b){
       b.onclick=function(){
-        if(!confirm("Sair da área "+b.dataset.leave+"? Você perde o acesso ao chat e às ferramentas dela.")) return;
+        if(!confirm("Pedir saída da área "+b.dataset.leave+"? A diretoria da área precisa confirmar.")) return;
         b.disabled=true;
         call("dagv.approvals.leave_area",{area:b.dataset.leave})
-          .then(function(){ toast("Você saiu da área"); load(); })
+          .then(function(){ toast("Pedido de saída enviado à diretoria"); load(); })
           .catch(function(e){ toast(e); b.disabled=false; });
       };
     });
