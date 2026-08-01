@@ -62,9 +62,12 @@ body::before{
     radial-gradient(40% 50% at 12% 0%,var(--bg-2),transparent 72%);
   filter:blur(46px);
 }
+/* NOTE: vertical centering via `margin-block:auto`, never `justify-content:center` —
+   with centering, content taller than the viewport gets clipped at the top and
+   becomes unreachable by scrolling. Auto margins collapse to 0 instead. */
 .wrap{position:relative;z-index:1;min-height:100dvh;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;padding:clamp(1rem,4vw,2.5rem) 1.15rem;gap:1.5rem}
-.shell{width:100%;max-width:27.5rem;display:flex;flex-direction:column;gap:1.4rem}
+  align-items:center;padding:clamp(1.25rem,4vw,2.5rem) 1.15rem}
+.shell{width:100%;max-width:27.5rem;margin-block:auto;display:flex;flex-direction:column;gap:1.4rem}
 
 /* header */
 .top{display:flex;flex-direction:column;gap:.55rem;padding-left:.15rem}
@@ -76,12 +79,12 @@ h1{font-size:1.6rem;font-weight:600;letter-spacing:-.022em;margin:.15rem 0 0;lin
 
 /* card */
 .card{
-  background:var(--glass);border:1px solid var(--glass-line);border-radius:20px;
+  width:100%;background:var(--glass);border:1px solid var(--glass-line);border-radius:20px;
   backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4);
   padding:clamp(1.15rem,4vw,1.6rem);
 }
-form{display:flex;flex-direction:column;gap:1.05rem}
-.f{display:flex;flex-direction:column;gap:.4rem;min-width:0}
+form{display:flex;flex-direction:column;gap:1.05rem;min-width:0}
+.f{display:flex;flex-direction:column;gap:.4rem;min-width:0;width:100%}
 label,.lb{font-size:.735rem;font-weight:600;letter-spacing:.055em;text-transform:uppercase;color:var(--ink-2)}
 .req{color:var(--accent-ui)}
 input,select{
@@ -96,8 +99,8 @@ select{
   background-repeat:no-repeat;background-position:right .85rem center;padding-right:2.4rem;cursor:pointer;
 }
 .hint{font-size:.75rem;color:var(--ink-3);letter-spacing:-.005em}
-.row{display:grid;gap:.7rem;grid-template-columns:1fr;transition:grid-template-columns .28s ease}
-.row.split{grid-template-columns:1fr 1fr}
+.row{display:grid;gap:1.05rem;grid-template-columns:1fr;width:100%;min-width:0}
+@media (min-width:380px){.row.split{grid-template-columns:1fr 1fr;gap:.7rem}}
 #turmaf{display:none;min-width:0}
 #turmaf.on{display:flex;animation:fade .28s ease}
 @keyframes fade{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
@@ -114,7 +117,7 @@ select{
 .info:focus-visible{outline:none;box-shadow:0 0 0 3.5px var(--accent-soft)}
 .cnt{margin-left:auto;font-size:.735rem;font-weight:600;color:var(--ink-3);font-variant-numeric:tabular-nums;letter-spacing:.02em}
 .cnt.ok{color:var(--accent)}
-.chips{display:flex;flex-wrap:wrap;gap:.4rem}
+.chips{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center}
 .chip{
   font-family:inherit;font-size:.855rem;font-weight:500;color:var(--ink-2);cursor:pointer;
   background:var(--field);border:1px solid var(--line);border-radius:999px;padding:.5rem .8rem;
@@ -160,8 +163,10 @@ select{
   border-radius:18px 18px 0 0;padding:1.4rem 1.25rem calc(1.4rem + env(safe-area-inset-bottom));
   width:100%;max-width:27.5rem;animation:slide .3s cubic-bezier(.2,.7,.3,1)}
 @keyframes slide{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
-.sheet h3{margin:0 0 .5rem;font-size:1.05rem;font-weight:600;letter-spacing:-.015em}
-.sheet p{margin:0 0 1.1rem;color:var(--ink-2);font-size:.875rem}
+.sheet p{margin:0 0 1.15rem;color:var(--ink-2);font-size:.925rem;line-height:1.6}
+.sheetlink{color:var(--accent);font-weight:550;text-decoration:underline;
+  text-underline-offset:2.5px;text-decoration-color:var(--accent-soft)}
+.sheetlink:hover{text-decoration-color:var(--accent)}
 @media (min-width:640px){.sheet{align-items:center}.sheet .body{border-radius:18px;padding-bottom:1.4rem}}
 
 /* comfortable touch targets on phones (44px) */
@@ -209,12 +214,12 @@ select{
           <div class="f">
             <label for="personal_email">E-mail pessoal</label>
             <input id="personal_email" name="personal_email" type="email" inputmode="email"
-                   autocapitalize="off" placeholder="voce@gmail.com">
+                   autocapitalize="off" placeholder="seu@email.com">
           </div>
           <div class="f">
             <label for="phone">Telefone <span class="req">*</span></label>
             <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel"
-                   placeholder="(11) 90000-0000" required>
+                   placeholder="(XX) 9XXXX-XXXX" required>
           </div>
         </div>
 
@@ -276,9 +281,9 @@ select{
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheettitle">
   <div class="veil" data-close></div>
   <div class="body">
-    <h3 id="sheettitle">As áreas do DAGV</h3>
-    <p>Um guia com a descrição de cada área estará disponível em breve. Se estiver em dúvida, escolha as que mais combinam com você — dá para entrar em outras depois.</p>
-    <button class="btn" type="button" data-close>Entendi</button>
+    <p id="sheettitle">O DAGV divide suas operações em diferentes áreas, cada uma liderada por sua diretoria.
+      <a href="#" class="sheetlink" id="areaslink">Clique aqui para conhecer nossas áreas.</a></p>
+    <button class="btn" type="button" data-close>Entendi!</button>
   </div>
 </div>
 {% endblock %}
@@ -290,6 +295,11 @@ select{
              "Integração","Parcerias","Pessoas","Planejamento","Produtos","Projetos"];
   var MIN=3, sel=new Set();
   var $=function(id){return document.getElementById(id)};
+
+  // shuffle so no area is favoured by sitting first every time
+  for(var i=AREAS.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1)), t=AREAS[i]; AREAS[i]=AREAS[j]; AREAS[j]=t;
+  }
 
   // area chips
   AREAS.forEach(function(a){
