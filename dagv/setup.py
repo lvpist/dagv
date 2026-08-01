@@ -237,4 +237,45 @@ def pin_to_home():
 def after_migrate():
     """Re-apply everything ERPNext's own migrations would wipe."""
     setup_desk_navigation()
+    setup_sidebar()
     pin_to_home()
+
+
+def setup_sidebar():
+    """Add DAGV to the desk sidebar.
+
+    The desk's left sidebar is driven by `Workspace Sidebar` records, not by
+    Workspace records — that's why Raven (which has one) appeared and DAGV
+    didn't. Registered under the erpnext app so it shows in the sidebar people
+    actually use, rather than behind an app switch.
+    """
+    name = "DAGV"
+    doc = (
+        frappe.get_doc("Workspace Sidebar", name)
+        if frappe.db.exists("Workspace Sidebar", name)
+        else frappe.new_doc("Workspace Sidebar")
+    )
+    doc.name = name
+    doc.title = name
+    doc.module = "DAGV"
+    doc.app = "erpnext"
+    doc.standard = 0
+
+    doc.set("items", [])
+    doc.append("items", {"type": "Link", "label": "Painel do membro",
+                         "link_type": "URL", "url": "/painel"})
+    doc.append("items", {"type": "Link", "label": "Aprovações",
+                         "link_type": "URL", "url": "/aprovacoes"})
+    doc.append("items", {"type": "Link", "label": "Gestão",
+                         "link_type": "URL", "url": "/gestao"})
+    doc.append("items", {"type": "Link", "label": "Áreas",
+                         "link_type": "DocType", "link_to": "DAGV Area"})
+    doc.append("items", {"type": "Link", "label": "Membros",
+                         "link_type": "DocType", "link_to": "DAGV Membership"})
+    doc.append("items", {"type": "Link", "label": "Cadastros",
+                         "link_type": "DocType", "link_to": "DAGV Registration Request"})
+
+    doc.flags.ignore_permissions = True
+    doc.save() if not doc.is_new() else doc.insert()
+    frappe.db.commit()
+    return {"sidebar": doc.name, "items": [i.label for i in doc.items]}
