@@ -102,20 +102,17 @@ select{
 #turmaf.on{display:flex;animation:fade .28s ease}
 @keyframes fade{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
 
-/* segmented */
-.seg{display:flex;flex-wrap:wrap;gap:.32rem}
-.seg button{
-  flex:1 1 2.4rem;min-width:2.4rem;min-height:2.6rem;font-family:inherit;font-size:.9rem;font-weight:550;
-  color:var(--ink-2);background:var(--field);border:1px solid var(--line);border-radius:10px;
-  cursor:pointer;transition:all .14s;padding:.4rem .1rem
-}
-.seg button:hover{color:var(--ink);border-color:var(--ink-3)}
-.seg button[aria-pressed="true"]{background:var(--accent-ui);border-color:var(--accent-ui);color:var(--accent-ink);font-weight:650}
-.seg button:focus-visible{outline:none;box-shadow:0 0 0 3.5px var(--accent-soft)}
-
 /* chips */
-.chead{display:flex;align-items:baseline;justify-content:space-between;gap:.75rem;flex-wrap:wrap}
-.cnt{font-size:.735rem;font-weight:600;color:var(--ink-3);font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.chead{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}
+.info{
+  width:1.15rem;height:1.15rem;flex:none;border-radius:50%;border:1px solid var(--line);
+  background:var(--field);color:var(--ink-3);font-family:inherit;font-size:.68rem;font-weight:700;
+  line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
+  transition:all .14s;-webkit-tap-highlight-color:transparent
+}
+.info:hover{color:var(--accent);border-color:var(--accent-ui);background:var(--accent-soft)}
+.info:focus-visible{outline:none;box-shadow:0 0 0 3.5px var(--accent-soft)}
+.cnt{margin-left:auto;font-size:.735rem;font-weight:600;color:var(--ink-3);font-variant-numeric:tabular-nums;letter-spacing:.02em}
 .cnt.ok{color:var(--accent)}
 .chips{display:flex;flex-wrap:wrap;gap:.4rem}
 .chip{
@@ -126,13 +123,6 @@ select{
 .chip:hover{color:var(--ink);border-color:var(--ink-3)}
 .chip[aria-pressed="true"]{background:var(--accent-ui);border-color:var(--accent-ui);color:var(--accent-ink);font-weight:600}
 .chip:focus-visible{outline:none;box-shadow:0 0 0 3.5px var(--accent-soft)}
-.link{
-  background:none;border:none;padding:0;font-family:inherit;font-size:.775rem;font-weight:500;
-  color:var(--accent);cursor:pointer;text-decoration:underline;text-underline-offset:2.5px;
-  text-decoration-color:var(--accent-soft);align-self:flex-start;margin-top:.1rem
-}
-.link:hover{text-decoration-color:var(--accent)}
-
 /* submit */
 .btn{
   font-family:inherit;font-size:.985rem;font-weight:650;color:var(--accent-ink);background:var(--accent-ui);
@@ -174,9 +164,14 @@ select{
 .sheet p{margin:0 0 1.1rem;color:var(--ink-2);font-size:.875rem}
 @media (min-width:640px){.sheet{align-items:center}.sheet .body{border-radius:18px;padding-bottom:1.4rem}}
 
+/* comfortable touch targets on phones (44px) */
+@media (max-width:640px){
+  .chip{min-height:2.75rem;padding:.6rem .85rem}
+  .info{width:1.5rem;height:1.5rem;font-size:.75rem}
+}
 @media (max-width:400px){
   h1{font-size:1.42rem}
-  .chip{font-size:.82rem;padding:.46rem .7rem}
+  .chip{font-size:.82rem;padding:.6rem .72rem}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -212,9 +207,9 @@ select{
 
         <div class="row">
           <div class="f">
-            <label for="personal_email">E-mail pessoal <span class="req">*</span></label>
+            <label for="personal_email">E-mail pessoal</label>
             <input id="personal_email" name="personal_email" type="email" inputmode="email"
-                   autocapitalize="off" placeholder="voce@gmail.com" required>
+                   autocapitalize="off" placeholder="voce@gmail.com">
           </div>
           <div class="f">
             <label for="phone">Telefone <span class="req">*</span></label>
@@ -224,8 +219,12 @@ select{
         </div>
 
         <div class="f">
-          <span class="lb">Semestre <span class="req">*</span></span>
-          <div class="seg" id="sem" role="group" aria-label="Semestre"></div>
+          <label for="semester">Semestre <span class="req">*</span></label>
+          <select id="semester" name="semester" required>
+            <option value="" disabled selected>Selecione…</option>
+            <option>1</option><option>2</option><option>3</option><option>4</option>
+            <option>5</option><option>6</option><option>7</option><option>8+</option>
+          </select>
         </div>
 
         <div class="row" id="courserow">
@@ -251,10 +250,10 @@ select{
         <div class="f">
           <div class="chead">
             <span class="lb">Áreas de interesse <span class="req">*</span></span>
+            <button type="button" class="info" id="areasbtn" aria-label="Não conhece as áreas?" title="Não conhece as áreas?">?</button>
             <span class="cnt" id="cnt">0 de 3</span>
           </div>
           <div class="chips" id="chips" role="group" aria-label="Áreas de interesse"></div>
-          <button type="button" class="link" id="areasbtn">Não conhece as áreas?</button>
         </div>
 
         <div class="err" id="err" role="alert"></div>
@@ -287,22 +286,10 @@ select{
 {% block script %}
 <script>
 (function(){
-  var AREAS=["Acadêmicos","Cultural","Eventos","Financeiro","Criativo","Entidades","Institucional",
+  var AREAS=["Acadêmico","Cultural","Eventos","Financeiro","Criativo","Entidades","Institucional",
              "Integração","Parcerias","Pessoas","Planejamento","Produtos","Projetos"];
-  var MIN=3, sel=new Set(), semester="";
+  var MIN=3, sel=new Set();
   var $=function(id){return document.getElementById(id)};
-
-  // semester segmented
-  var semv=["1","2","3","4","5","6","7","8","8+"];
-  semv.forEach(function(v){
-    var b=document.createElement("button");
-    b.type="button"; b.textContent=v; b.setAttribute("aria-pressed","false");
-    b.onclick=function(){
-      semester=v;
-      Array.prototype.forEach.call($("sem").children,function(c){c.setAttribute("aria-pressed", c===b?"true":"false")});
-    };
-    $("sem").appendChild(b);
-  });
 
   // area chips
   AREAS.forEach(function(a){
@@ -348,14 +335,14 @@ select{
       fgv_email:form.fgv_email.value.trim(),
       personal_email:form.personal_email.value.trim(),
       phone:form.phone.value.trim(),
-      semester:semester,
+      semester:form.semester.value,
       course:form.course.value,
       turma:$("turma").value,
       desired_areas:Array.from(sel).join(", ")
     };
     if(!d.full_name) return err.textContent="Informe seu nome completo.";
     if(!/@fgv\.edu\.br$/i.test(d.fgv_email)) return err.textContent="Use seu e-mail institucional @fgv.edu.br.";
-    if(!d.personal_email||!/@/.test(d.personal_email)) return err.textContent="Informe um e-mail pessoal válido.";
+    if(d.personal_email && !/@/.test(d.personal_email)) return err.textContent="E-mail pessoal inválido.";
     if(!d.phone) return err.textContent="Informe seu telefone.";
     if(!d.semester) return err.textContent="Selecione seu semestre.";
     if(!d.course) return err.textContent="Selecione seu curso.";

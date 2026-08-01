@@ -12,7 +12,7 @@ COURSE_TO_ACADEMIC_AREA = {
     "Economia": "VPEcono",
 }
 
-ACADEMIC_CHIP = "Acadêmicos"
+ACADEMIC_CHIP = "Acadêmico"
 
 # Institutional pattern: C + 6 or 7 digits. Checked softly (warn, never block) —
 # the domain is the hard gate, directors catch oddities at approval.
@@ -38,8 +38,8 @@ def submit_registration(
     full_name,
     fgv_email,
     course,
-    personal_email,
     phone,
+    personal_email=None,
     semester=None,
     turma=None,
     desired_areas=None,
@@ -54,8 +54,8 @@ def submit_registration(
         frappe.throw("Informe seu nome completo.")
     if not email.endswith("@fgv.edu.br"):
         frappe.throw("O cadastro exige um e-mail institucional @fgv.edu.br.")
-    if not personal_email or "@" not in personal_email:
-        frappe.throw("Informe um e-mail pessoal válido.")
+    if personal_email and "@" not in personal_email:
+        frappe.throw("E-mail pessoal inválido.")
     if not phone:
         frappe.throw("Informe seu telefone.")
     if not course:
@@ -72,7 +72,7 @@ def submit_registration(
             "doctype": "DAGV Registration Request",
             "full_name": full_name,
             "fgv_email": email,
-            "personal_email": personal_email,
+            "personal_email": personal_email or None,
             "phone": phone,
             "semester": (semester or "").strip() or None,
             "course": course,

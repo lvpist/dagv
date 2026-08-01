@@ -48,7 +48,7 @@
    "fieldname": "semester",
    "fieldtype": "Select",
    "label": "Semester",
-   "options": "\n1\n2\n3\n4\n5\n6\n7\n8\n8+"
+   "options": "\n1\n2\n3\n4\n5\n6\n7\n8+"
   },
   {
    "fieldname": "course",
