@@ -188,6 +188,63 @@ def approve_registration(registration, areas=None, reject=False):
 # Member-facing: request an area from the dashboard
 # ---------------------------------------------------------------------------
 
+@frappe.whitelist()
+def my_dashboard():
+    """Everything the member's own panel needs, in one round-trip."""
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw("Faça login para ver seu painel.")
+
+    mine = {
+        m["area"]: m
+        for m in frappe.get_all(
+            "DAGV Membership",
+            filters={"member": user, "status": ["in", (APPROVED, REQUESTED)]},
+            fields=["name", "area", "rank", "status"],
+        )
+    }
+
+    areas = []
+    for a in frappe.get_all(
+        "DAGV Area",
+        filters={"is_active": 1},
+        fields=["name", "short_code", "category", "description",
+                "required_course", "raven_workspace"],
+        order_by="sort_order",
+    ):
+        held = mine.get(a["name"])
+        a["membership"] = held["name"] if held else None
+        a["state"] = held["status"] if held else None
+        a["rank"] = held["rank"] if held else None
+        areas.append(a)
+
+    course = frappe.db.get_value("DAGV Registration Request", user, "course")
+    return {
+        "user": user,
+        "full_name": frappe.db.get_value("User", user, "full_name") or user,
+        "course": course,
+        "areas": areas,
+        "can_approve": bool(led_areas()),
+    }
+
+
+@frappe.whitelist(methods=["POST"])
+def leave_area(area):
+    """A member steps out of an area (revokes workspace + role)."""
+    user = frappe.session.user
+    name = frappe.db.exists("DAGV Membership", {"member": user, "area": area})
+    if not name:
+        frappe.throw("Você não faz parte desta área.")
+
+    doc = frappe.get_doc("DAGV Membership", name)
+    doc.status = "Removed"
+    doc.decided_on = frappe.utils.now_datetime()
+    doc.decided_by = user
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+    return {"ok": True}
+
+
 @frappe.whitelist(methods=["POST"])
 def request_area(area):
     """A logged-in member asks to join an area."""
