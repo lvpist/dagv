@@ -387,7 +387,7 @@ select{
     if(!d) return "";
     var parts=[d.slice(0,3)], rest=d.slice(3);
     while(rest.length){ parts.push(rest.slice(0,3)); rest=rest.slice(3); }
-    return parts.join(" ");
+    return "+"+parts.join(" ");
   }
   function repaintPhone(){
     var el=$("phone");
@@ -418,7 +418,7 @@ select{
       full_name:form.full_name.value.trim(),
       fgv_email:form.fgv_email.value.trim(),
       personal_email:form.personal_email.value.trim(),
-      phone:(intl ? "+" : "+55 ") + form.phone.value.trim(),
+      phone:(intl ? "" : "+55 ") + form.phone.value.trim(),
       semester:form.semester.value,
       course:form.course.value,
       turma:$("turma").value,
