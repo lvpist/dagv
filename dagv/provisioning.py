@@ -16,6 +16,7 @@ import frappe
 
 GERAL_WORKSPACE = "Geral"
 BASE_ROLE = "DAGV Member"
+RAVEN_ROLE = "Raven User"
 FGV_DOMAIN = "@fgv.edu.br"
 
 APPROVED = "Approved"
@@ -148,7 +149,16 @@ def apply_membership(membership):
 
 def _ensure_raven_user(email, full_name=None):
     """Raven user must exist AND be enabled — a disabled Raven User is filtered
-    out of every channel member list, which looks like a broken membership."""
+    out of every channel member list, which looks like a broken membership.
+
+    Raven re-syncs this flag on *every* User save: with the "Raven User" role it
+    mirrors User.enabled, without it the flag is forced back to 0. Grant the role
+    first or the next role change we make silently disables them again.
+    """
+    if RAVEN_ROLE not in frappe.get_roles(email):
+        frappe.get_doc("User", email).add_roles(RAVEN_ROLE)
+        frappe.clear_cache(user=email)
+
     if not frappe.db.exists("Raven User", email):
         frappe.get_doc(
             {
