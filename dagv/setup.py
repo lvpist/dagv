@@ -69,3 +69,50 @@ def seed_areas():
 
     frappe.db.commit()
     return {"created": created, "skipped": skipped}
+
+
+# Which slice of ERPNext each area starts with. Deliberately lean: an area sees
+# only what its work needs, and an admin can change any of it in the panel.
+# Empty list = the area has no ERP tools yet (chat only).
+DEFAULT_MODULES = {
+    "Produtos": ["Stock", "Selling", "Buying"],   # estoque, grife, e-commerce
+    "Financeiro": ["Accounts"],                   # prestação de contas, notas
+    "Parcerias": ["CRM", "Selling"],              # empresas parceiras e benefícios
+    "Eventos": ["Projects"],
+    "Projetos": ["Projects"],
+    "Planejamento": ["Projects"],
+    "Integração": ["Projects"],
+    "Cultural": ["Projects"],
+    "Criativo": ["Projects"],
+    "Entidades": ["Projects"],
+    "Pessoas": ["Projects"],
+    "Institucional": ["Support", "Projects"],     # demandas e ouvidoria
+    "VPAE": ["Support"],
+    "VPAP": ["Support"],
+    "VPEcono": ["Support"],
+}
+
+
+def seed_area_modules(overwrite=False):
+    """Give each area its starting ERP modules.
+
+    Skips areas that already have modules set, so a leadership's own choices are
+    never overwritten by a later run.
+    """
+    touched = []
+    for area, modules in DEFAULT_MODULES.items():
+        if not frappe.db.exists("DAGV Area", area):
+            continue
+        doc = frappe.get_doc("DAGV Area", area)
+        if doc.erp_modules and not overwrite:
+            continue
+        doc.set("erp_modules", [])
+        for module in modules:
+            if frappe.db.exists("Module Def", module):
+                doc.append("erp_modules", {"module": module})
+        doc.flags.ignore_permissions = True
+        doc.save()
+        touched.append(area)
+
+    frappe.db.commit()
+    return {"updated": touched}

@@ -69,7 +69,7 @@
 <script>
 (function(){
   var $=function(id){return document.getElementById(id)};
-  var view="areas", areas=[], people=[], editing=null;
+  var view="areas", areas=[], people=[], MODULES=[], pickedModules=[];
   var COURSES=["","Administração de Empresas","Administração Pública","Economia"];
   var RANKS=["Membro","Coordenador","Diretor","Vice-Diretor"];
   var CATS=["Mínima","Suplementar","Executiva"];
@@ -91,6 +91,9 @@
     var jobs = view==="people" ? [call("dagv.admin.list_people")]
              : view==="term"   ? [call("dagv.admin.offboard_preview")]
              : [call("dagv.admin.list_areas")];
+    if(view==="areas" && !MODULES.length){
+      call("dagv.admin.list_modules").then(function(m){ MODULES=m||[]; }).catch(function(){});
+    }
     jobs[0].then(function(d){
       if(view==="people") people=d; else if(view==="areas") areas=d; else people=d;
       render(d);
@@ -117,7 +120,8 @@
           (a.is_active?'':' <span class="tag off">arquivada</span>')+
           (a.required_course?' <span class="tag">só '+esc(a.required_course.split(" ").pop())+'</span>':'')+
         '</div>'+
-        '<div class="dim">'+a.members+' membro(s)'+(a.description?' · '+esc(a.description):'')+'</div></div>'+
+        '<div class="dim">'+a.members+' membro(s) · ERP: '+
+          ((a.modules&&a.modules.length)?esc(a.modules.join(", ")):'nenhum módulo')+'</div></div>'+
         '<div class="acts">'+
           '<button class="b" data-edit="'+esc(a.name)+'">Editar</button>'+
           '<button class="b" data-toggle="'+esc(a.name)+'" data-on="'+(a.is_active?1:0)+'">'+(a.is_active?"Arquivar":"Reativar")+'</button>'+
@@ -155,16 +159,35 @@
           '<span class="hint">Use só nas VPs acadêmicas.</span></div>'+
         '<div><label class="lb">Ordem</label><input id="f-order" type="number" value="'+esc(a&&a.sort_order?a.sort_order:"")+'"></div>'+
       '</div>'+
+      '<div><label class="lb">Módulos do ERP que esta área libera</label>'+
+        '<div class="chips" id="f-mods"></div>'+
+        '<span class="hint">Os membros só enxergam estes módulos no ERP. Nenhum selecionado = só o chat.</span></div>'+
       '<div class="acts"><button class="b pri" id="f-save">'+(isNew?"Criar área":"Salvar")+'</button>'+
       '<button class="b" id="f-cancel">Cancelar</button></div>'+
       (isNew?'<span class="hint">Ao criar, o workspace privado no Raven e o papel de acesso são gerados automaticamente.</span>':'')+
       '</div></div>';
     $("body").innerHTML=h;
+
+    pickedModules = (a && a.modules) ? a.modules.slice() : [];
+    var mods=$("f-mods");
+    MODULES.forEach(function(m){
+      var b=document.createElement("button");
+      b.type="button"; b.className="chip"; b.textContent=m;
+      b.setAttribute("aria-pressed", pickedModules.indexOf(m)>-1 ? "true":"false");
+      b.onclick=function(){
+        var i=pickedModules.indexOf(m);
+        if(i>-1){ pickedModules.splice(i,1); b.setAttribute("aria-pressed","false"); }
+        else{ pickedModules.push(m); b.setAttribute("aria-pressed","true"); }
+      };
+      mods.appendChild(b);
+    });
+
     $("f-cancel").onclick=load;
     $("f-save").onclick=function(){
       var payload={area:a?a.name:null, area_name:$("f-name").value.trim(), short_code:$("f-code").value.trim(),
         category:$("f-cat").value, description:$("f-desc").value.trim(),
-        required_course:$("f-course").value, is_active:a?a.is_active:1, sort_order:$("f-order").value};
+        required_course:$("f-course").value, is_active:a?a.is_active:1, sort_order:$("f-order").value,
+        modules:pickedModules};
       $("f-save").disabled=true;
       var go = (a && payload.area_name && payload.area_name!==a.name)
         ? call("dagv.admin.rename_area",{area:a.name,new_name:payload.area_name}).then(function(r){ payload.area=r.name; return call("dagv.admin.save_area",payload); })

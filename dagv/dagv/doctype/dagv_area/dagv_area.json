@@ -15,7 +15,8 @@
   "access_section",
   "required_course",
   "raven_workspace",
-  "erp_role"
+  "erp_role",
+  "erp_modules"
  ],
  "fields": [
   {
@@ -82,6 +83,13 @@
    "fieldtype": "Link",
    "label": "Papel no ERPNext",
    "options": "Role"
+  },
+  {
+   "description": "Quais partes do ERPNext os membros desta área enxergam. Vazio = nenhuma.",
+   "fieldname": "erp_modules",
+   "fieldtype": "Table MultiSelect",
+   "label": "Módulos do ERP",
+   "options": "DAGV Area Module"
   }
  ],
  "index_web_pages_for_search": 1,

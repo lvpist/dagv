@@ -43,12 +43,29 @@ def list_areas():
 
     for a in areas:
         a["members"] = counts.get(a["name"], 0)
+        a["modules"] = frappe.get_all(
+            "DAGV Area Module", filters={"parent": a["name"]}, pluck="module"
+        )
     return areas
+
+
+@frappe.whitelist()
+def list_modules():
+    """ERPNext modules an area can be given, minus Frappe's internal plumbing."""
+    _guard()
+    hidden = {"Core", "Custom", "Desk", "Automation", "Contacts", "Email", "Geo",
+              "Integrations", "Printing", "Utilities", "Workflow", "Communication",
+              "Portal", "Regional", "Setup", "Telephony", "EDI", "Bulk Transaction",
+              "ERPNext Integrations", "Raven"}
+    return sorted(
+        m for m in frappe.get_all("Module Def", pluck="name") if m not in hidden
+    )
 
 
 @frappe.whitelist(methods=["POST"])
 def save_area(area=None, area_name=None, short_code=None, category=None,
-              description=None, required_course=None, is_active=1, sort_order=None):
+              description=None, required_course=None, is_active=1, sort_order=None,
+              modules=None):
     """Create a new area or update an existing one."""
     _guard()
 
@@ -70,8 +87,24 @@ def save_area(area=None, area_name=None, short_code=None, category=None,
     if sort_order not in (None, ""):
         doc.sort_order = int(sort_order)
 
+    if modules is not None:
+        if isinstance(modules, str):
+            modules = frappe.parse_json(modules or "[]")
+        doc.set("erp_modules", [])
+        for module in modules or []:
+            if frappe.db.exists("Module Def", module):
+                doc.append("erp_modules", {"module": module})
+
     doc.flags.ignore_permissions = True
     doc.save() if doc.get("name") and not doc.is_new() else doc.insert()
+    frappe.db.commit()
+
+    # Members of this area see a different slice of the ERP now.
+    from dagv.provisioning import sync_module_access
+    for member in frappe.get_all(
+        "DAGV Membership", filters={"area": doc.name, "status": APPROVED}, pluck="member"
+    ):
+        sync_module_access(member)
     frappe.db.commit()
     return {"ok": True, "name": doc.name}
 

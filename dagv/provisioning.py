@@ -17,6 +17,10 @@ import frappe
 GERAL_WORKSPACE = "Geral"
 BASE_ROLE = "DAGV Member"
 RAVEN_ROLE = "Raven User"
+
+# Modules every member keeps regardless of area. Everything else in ERPNext is
+# hidden unless one of their areas asks for it — that's the decluttering.
+ALWAYS_VISIBLE = {"Raven"}
 FGV_DOMAIN = "@fgv.edu.br"
 
 APPROVED = "Approved"
@@ -146,6 +150,8 @@ def apply_membership(membership):
         if area.erp_role:
             _remove_role(email, area.erp_role)
 
+    sync_module_access(email)
+
 
 def _ensure_raven_user(email, full_name=None):
     """Raven user must exist AND be enabled — a disabled Raven User is filtered
@@ -196,6 +202,41 @@ def _remove_from_workspace(workspace, email):
         frappe.delete_doc(
             "Raven Workspace Member", name, force=1, ignore_permissions=True
         )
+
+
+def sync_module_access(email):
+    """Hide every part of ERPNext the member's areas don't ask for.
+
+    Frappe filters the desk sidebar by the user's blocked modules, so we compute
+    the allow-list from the areas they're actually in and block the rest. New
+    members therefore land in a desk showing only their own tools instead of the
+    full ERP, and it updates itself as they join or leave areas.
+
+    Managers are left alone — they need the whole system to administer it.
+    """
+    roles = set(frappe.get_roles(email))
+    if roles.intersection({"System Manager", "Administrator"}):
+        return
+
+    allowed = set(ALWAYS_VISIBLE)
+    for area in frappe.get_all(
+        "DAGV Membership", filters={"member": email, "status": APPROVED}, pluck="area"
+    ):
+        for row in frappe.get_all(
+            "DAGV Area Module", filters={"parent": area}, pluck="module"
+        ):
+            allowed.add(row)
+
+    every = set(frappe.get_all("Module Def", pluck="name"))
+    blocked = sorted(every - allowed)
+
+    user = frappe.get_doc("User", email)
+    user.set("block_modules", [])
+    for module in blocked:
+        user.append("block_modules", {"module": module})
+    user.flags.ignore_permissions = True
+    user.save()
+    frappe.clear_cache(user=email)
 
 
 def _remove_role(email, role):

@@ -117,6 +117,18 @@ body::before{content:"";position:fixed;inset:-20% -10% auto -10%;height:55vh;poi
 .tbtn[disabled],.tbtn[disabled]:hover{opacity:.45;cursor:not-allowed;background:transparent;
   color:var(--ink-3);border-color:var(--line)}
 
+/* selectable chip — used by every picker (areas, modules) */
+.chips{display:flex;flex-wrap:wrap;gap:.36rem}
+.chip{font-family:inherit;font-size:.82rem;font-weight:500;color:var(--ink-2);cursor:pointer;
+  background:transparent;border:1px solid var(--line);border-radius:999px;padding:.42rem .72rem;
+  min-height:2.15rem;transition:background .14s,color .14s,border-color .14s;
+  -webkit-tap-highlight-color:transparent}
+.chip:not([aria-pressed="true"]):not([disabled]):hover{color:var(--ink);background:var(--field);border-color:var(--ink-3)}
+.chip[aria-pressed="true"]{background:var(--accent-ui);border-color:var(--accent-ui);
+  color:var(--accent-ink);font-weight:600}
+.chip[disabled],.chip[disabled]:hover{opacity:.35;cursor:not-allowed;background:transparent;
+  color:var(--ink-3);border-color:var(--line)}
+
 /* full-width primary (form submits) */
 .btn{font-family:inherit;font-size:.97rem;font-weight:650;color:var(--accent-ink);background:var(--accent-ui);
   border:1px solid var(--accent-ui);border-radius:var(--radius);padding:.86rem 1rem;min-height:2.95rem;
