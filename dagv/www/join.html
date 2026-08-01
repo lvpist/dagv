@@ -123,6 +123,17 @@ select{
   background-repeat:no-repeat;background-position:right .85rem center;padding-right:2.4rem;cursor:pointer;
 }
 .hint{font-size:.75rem;color:var(--ink-3);letter-spacing:-.005em}
+
+/* phone: country toggle fused to the left of the field */
+.phonebox{display:flex;min-width:0}
+.ccbtn{font-family:inherit;font-size:.95rem;font-weight:550;color:var(--ink);background:var(--field);
+  border:1px solid var(--line);border-right:none;border-radius:var(--radius) 0 0 var(--radius);
+  padding:.78rem .7rem;cursor:pointer;display:flex;align-items:center;gap:.34rem;white-space:nowrap;
+  transition:border-color .16s,background .16s;-webkit-tap-highlight-color:transparent}
+.ccbtn:hover{background:var(--accent-soft)}
+.ccbtn:focus-visible{outline:none;box-shadow:0 0 0 3.5px var(--accent-soft);position:relative;z-index:1}
+.ccbtn .dial{font-size:.85rem;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.phonebox input{border-radius:0 var(--radius) var(--radius) 0;min-width:0}
 /* NOTE: never name these `.row`/`.col` — Frappe's website CSS ships Bootstrap,
    whose `.row` has `margin: 0 -15px` and silently drags the field out of the
    card's padding. Keep custom class names out of Bootstrap's namespace. */
@@ -245,8 +256,13 @@ select{
           </div>
           <div class="f">
             <label for="phone">Telefone <span class="req">*</span></label>
-            <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel"
-                   placeholder="(XX) 9XXXX-XXXX" required>
+            <div class="phonebox">
+              <button type="button" class="ccbtn" id="ccbtn" aria-label="Alternar entre Brasil e internacional">
+                <span id="ccflag">🇧🇷</span><span class="dial" id="ccdial">+55</span>
+              </button>
+              <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel"
+                     placeholder="(XX) 9XXXX-XXXX" required>
+            </div>
           </div>
         </div>
 
@@ -355,6 +371,37 @@ select{
   $("sheet").addEventListener("click",function(e){ if(e.target.hasAttribute("data-close")) $("sheet").classList.remove("on"); });
   document.addEventListener("keydown",function(e){ if(e.key==="Escape") $("sheet").classList.remove("on"); });
 
+  // phone: Brazilian mask by default, loose international grouping on toggle
+  var intl=false;
+  function digitsOf(v){ return (v||"").replace(/\D/g,""); }
+  function fmtBR(v){
+    var d=digitsOf(v).slice(0,11);
+    if(!d) return "";
+    if(d.length<=2) return "("+d;
+    if(d.length<=6) return "("+d.slice(0,2)+") "+d.slice(2);
+    if(d.length<=10) return "("+d.slice(0,2)+") "+d.slice(2,6)+"-"+d.slice(6);
+    return "("+d.slice(0,2)+") "+d.slice(2,7)+"-"+d.slice(7);
+  }
+  function fmtIntl(v){
+    var d=digitsOf(v).slice(0,15);
+    if(!d) return "";
+    var parts=[d.slice(0,3)], rest=d.slice(3);
+    while(rest.length){ parts.push(rest.slice(0,3)); rest=rest.slice(3); }
+    return parts.join(" ");
+  }
+  function repaintPhone(){
+    var el=$("phone");
+    el.value = intl ? fmtIntl(el.value) : fmtBR(el.value);
+  }
+  $("phone").addEventListener("input", repaintPhone);
+  $("ccbtn").onclick=function(){
+    intl=!intl;
+    $("ccflag").textContent = intl ? "🌐" : "🇧🇷";
+    $("ccdial").textContent = intl ? "Intl." : "+55";
+    $("phone").placeholder = intl ? "país + número" : "(XX) 9XXXX-XXXX";
+    repaintPhone();
+  };
+
   // soft warning on email format
   var RE=/^c\d{6,7}@fgv\.edu\.br$/i;
   $("fgv_email").addEventListener("blur",function(){
@@ -371,7 +418,7 @@ select{
       full_name:form.full_name.value.trim(),
       fgv_email:form.fgv_email.value.trim(),
       personal_email:form.personal_email.value.trim(),
-      phone:form.phone.value.trim(),
+      phone:(intl ? "+" : "+55 ") + form.phone.value.trim(),
       semester:form.semester.value,
       course:form.course.value,
       turma:$("turma").value,
@@ -380,7 +427,11 @@ select{
     if(!d.full_name) return err.textContent="Informe seu nome completo.";
     if(!/@fgv\.edu\.br$/i.test(d.fgv_email)) return err.textContent="Use seu e-mail institucional @fgv.edu.br.";
     if(d.personal_email && !/@/.test(d.personal_email)) return err.textContent="E-mail pessoal inválido.";
-    if(!d.phone) return err.textContent="Informe seu telefone.";
+    var pdigits=digitsOf(form.phone.value);
+    if(!pdigits) return err.textContent="Informe seu telefone.";
+    if(!intl && (pdigits.length<10 || pdigits.length>11))
+      return err.textContent="Telefone incompleto — use DDD + número.";
+    if(intl && pdigits.length<8) return err.textContent="Telefone internacional incompleto.";
     if(!d.semester) return err.textContent="Selecione seu semestre.";
     if(!d.course) return err.textContent="Selecione seu curso.";
     if(d.course==="Administração de Empresas" && !d.turma) return err.textContent="Selecione sua turma.";
