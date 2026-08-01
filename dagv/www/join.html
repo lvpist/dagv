@@ -2,133 +2,182 @@
 
 {% block title %}Cadastro · DAGV{% endblock %}
 
+{% block head_include %}
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+{% endblock %}
+
 {% block style %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper:#F4F6F1; --card:#FFFFFF; --ink:#16241D; --ink-soft:#4C5D54;
-  --line:#E2E7DD; --line-strong:#CBD4C6;
-  --brand:#14503A; --brand-2:#0C3527; --brand-ink:#EAF3EC;
-  --accent:#1C7A54; --accent-strong:#166644; --accent-ink:#FFFFFF;
-  --brass:#B9862A; --brass-soft:#E9D9B0;
-  --focus:rgba(28,122,84,.30); --danger:#B4442F;
-  --shadow:0 1px 2px rgba(20,40,30,.04),0 12px 34px -18px rgba(20,40,30,.28);
+  --bg:#FAFAF8; --bg-2:#F1F1EE;
+  --glass:rgba(255,255,255,.66); --glass-line:rgba(25,34,32,.09);
+  --ink:#191F1D; --ink-2:#666E6A; --ink-3:#8E948F;
+  --line:rgba(25,34,32,.13); --line-2:rgba(25,34,32,.07);
+  --field:rgba(255,255,255,.75);
+  --accent:#8F7A14; --accent-ui:#B69B1A; --accent-ink:#141812;
+  --accent-soft:rgba(182,155,26,.13);
+  --danger:#A5402C;
+  --radius:14px;
 }
 @media (prefers-color-scheme:dark){
   :root{
-    --paper:#0E1512; --card:#161F1A; --ink:#E9F0EA; --ink-soft:#9DB0A5;
-    --line:#26332C; --line-strong:#33443A;
-    --brand:#0C2C20; --brand-2:#061A13; --brand-ink:#DCEAE0;
-    --accent:#37A876; --accent-strong:#2C8F62; --accent-ink:#04140D;
-    --brass:#D6A64A; --brass-soft:#3A3320;
-    --focus:rgba(55,168,118,.36); --danger:#E4735C;
-    --shadow:0 1px 2px rgba(0,0,0,.3),0 16px 40px -20px rgba(0,0,0,.6);
+    --bg:#0A0C0B; --bg-2:#111413;
+    --glass:rgba(255,255,255,.045); --glass-line:rgba(255,255,255,.09);
+    --ink:#ECEFEA; --ink-2:#969C96; --ink-3:#6E746E;
+    --line:rgba(255,255,255,.12); --line-2:rgba(255,255,255,.07);
+    --field:rgba(255,255,255,.04);
+    --accent:#D9BE3D; --accent-ui:#D9BE3D; --accent-ink:#12150E;
+    --accent-soft:rgba(217,190,61,.14);
+    --danger:#DE8067;
   }
 }
 :root[data-theme="light"]{
-  --paper:#F4F6F1; --card:#FFFFFF; --ink:#16241D; --ink-soft:#4C5D54;
-  --line:#E2E7DD; --line-strong:#CBD4C6; --brand:#14503A; --brand-2:#0C3527;
-  --brand-ink:#EAF3EC; --accent:#1C7A54; --accent-strong:#166644; --accent-ink:#FFFFFF;
-  --brass:#B9862A; --brass-soft:#E9D9B0; --focus:rgba(28,122,84,.30); --danger:#B4442F;
-  --shadow:0 1px 2px rgba(20,40,30,.04),0 12px 34px -18px rgba(20,40,30,.28);
+  --bg:#FAFAF8; --bg-2:#F1F1EE; --glass:rgba(255,255,255,.66); --glass-line:rgba(25,34,32,.09);
+  --ink:#191F1D; --ink-2:#666E6A; --ink-3:#8E948F; --line:rgba(25,34,32,.13); --line-2:rgba(25,34,32,.07);
+  --field:rgba(255,255,255,.75); --accent:#8F7A14; --accent-ui:#B69B1A; --accent-ink:#141812;
+  --accent-soft:rgba(182,155,26,.13); --danger:#A5402C;
 }
 :root[data-theme="dark"]{
-  --paper:#0E1512; --card:#161F1A; --ink:#E9F0EA; --ink-soft:#9DB0A5;
-  --line:#26332C; --line-strong:#33443A; --brand:#0C2C20; --brand-2:#061A13;
-  --brand-ink:#DCEAE0; --accent:#37A876; --accent-strong:#2C8F62; --accent-ink:#04140D;
-  --brass:#D6A64A; --brass-soft:#3A3320; --focus:rgba(55,168,118,.36); --danger:#E4735C;
-  --shadow:0 1px 2px rgba(0,0,0,.3),0 16px 40px -20px rgba(0,0,0,.6);
+  --bg:#0A0C0B; --bg-2:#111413; --glass:rgba(255,255,255,.045); --glass-line:rgba(255,255,255,.09);
+  --ink:#ECEFEA; --ink-2:#969C96; --ink-3:#6E746E; --line:rgba(255,255,255,.12); --line-2:rgba(255,255,255,.07);
+  --field:rgba(255,255,255,.04); --accent:#D9BE3D; --accent-ui:#D9BE3D; --accent-ink:#12150E;
+  --accent-soft:rgba(217,190,61,.14); --danger:#DE8067;
 }
+
 *{box-sizing:border-box}
-html,body{margin:0;padding:0}
-body{font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-  background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.5}
-.jx{min-height:100vh;display:grid;grid-template-columns:1.02fr 1fr}
-@media (max-width:900px){.jx{grid-template-columns:1fr}}
-
-/* ---------- Brand panel ---------- */
-.brand{position:relative;overflow:hidden;color:var(--brand-ink);
-  background:radial-gradient(120% 90% at 15% 10%,var(--brand) 0%,var(--brand-2) 78%);
-  padding:clamp(2rem,4vw,3.6rem);display:flex;flex-direction:column;justify-content:space-between;gap:2.4rem}
-.brand::after{content:"";position:absolute;right:-18%;top:-12%;width:62%;aspect-ratio:1;border-radius:50%;
-  background:radial-gradient(circle at 50% 50%,rgba(185,134,42,.22),transparent 62%);pointer-events:none}
-.brand::before{content:"";position:absolute;left:-30%;bottom:-30%;width:70%;aspect-ratio:1;border:1px solid rgba(234,243,236,.10);border-radius:50%;pointer-events:none}
-.brand > *{position:relative;z-index:1}
-.wordmark{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:clamp(2.2rem,3.4vw,3rem);letter-spacing:.01em;line-height:1}
-.crest{display:flex;align-items:center;gap:.7rem}
-.crest .dot{width:.5rem;height:.5rem;border-radius:50%;background:var(--brass)}
-.orgname{font-size:.72rem;text-transform:uppercase;letter-spacing:.22em;color:rgba(234,243,236,.72);font-weight:600}
-.lede h1{font-family:"Fraunces",Georgia,serif;font-weight:500;font-size:clamp(1.7rem,2.9vw,2.5rem);
-  line-height:1.12;margin:0 0 .9rem;text-wrap:balance;max-width:16ch}
-.lede p{margin:0;color:rgba(234,243,236,.80);max-width:34ch;font-size:1.02rem}
-.perks{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.85rem}
-.perks li{display:flex;align-items:flex-start;gap:.7rem;color:rgba(234,243,236,.90);font-size:.96rem}
-.perks svg{flex:none;margin-top:.15rem;color:var(--brass-soft)}
-.brandfoot{font-size:.8rem;color:rgba(234,243,236,.55)}
-@media (max-width:900px){
-  .brand{padding:1.9rem 1.4rem;gap:1.4rem}
-  .perks{display:none}.lede p{display:none}
-  .brand{flex-direction:row;align-items:center;justify-content:space-between}
-  .brandfoot{display:none}.lede h1{margin:0;font-size:1.25rem;max-width:none}
+html,body{margin:0;padding:0;background:var(--bg)}
+body{
+  font-family:"Geist","Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;
+  min-height:100dvh;position:relative;overflow-x:hidden;
 }
+/* ambient blurred field */
+body::before{
+  content:"";position:fixed;inset:-20% -10% auto -10%;height:60vh;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(46% 60% at 78% 12%,var(--accent-soft),transparent 70%),
+    radial-gradient(40% 50% at 12% 0%,var(--bg-2),transparent 72%);
+  filter:blur(46px);
+}
+.wrap{position:relative;z-index:1;min-height:100dvh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:clamp(1rem,4vw,2.5rem) 1.15rem;gap:1.5rem}
+.shell{width:100%;max-width:27.5rem;display:flex;flex-direction:column;gap:1.4rem}
 
-/* ---------- Form panel ---------- */
-.panel{display:flex;justify-content:center;align-items:flex-start;padding:clamp(1.6rem,4vw,3.4rem)}
-.form-shell{width:100%;max-width:30rem;display:flex;flex-direction:column;gap:1.5rem;padding:2rem 0}
-.head .eyebrow{font-size:.72rem;text-transform:uppercase;letter-spacing:.2em;color:var(--accent);font-weight:700}
-.head h2{font-family:"Fraunces",Georgia,serif;font-weight:500;font-size:1.9rem;margin:.35rem 0 .35rem;line-height:1.1}
-.head p{margin:0;color:var(--ink-soft);font-size:.96rem}
+/* header */
+.top{display:flex;flex-direction:column;gap:.55rem;padding-left:.15rem}
+.mark{display:flex;align-items:center;gap:.55rem}
+.mark .sq{width:.62rem;height:.62rem;border-radius:2px;background:var(--accent-ui);transform:rotate(45deg)}
+.mark .nm{font-size:.7rem;font-weight:600;letter-spacing:.19em;text-transform:uppercase;color:var(--ink-2)}
+h1{font-size:1.6rem;font-weight:600;letter-spacing:-.022em;margin:.15rem 0 0;line-height:1.15;text-wrap:balance}
+.sub{margin:0;color:var(--ink-2);font-size:.9rem;max-width:34ch}
+
+/* card */
+.card{
+  background:var(--glass);border:1px solid var(--glass-line);border-radius:20px;
+  backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4);
+  padding:clamp(1.15rem,4vw,1.6rem);
+}
 form{display:flex;flex-direction:column;gap:1.05rem}
-.grid2{display:grid;grid-template-columns:1fr 1.4fr;gap:.9rem}
-.field{display:flex;flex-direction:column;gap:.36rem}
-label{font-size:.82rem;font-weight:600;color:var(--ink);letter-spacing:.01em}
-label .opt{color:var(--ink-soft);font-weight:500}
-input,select{font-family:inherit;font-size:.95rem;color:var(--ink);background:var(--card);
-  border:1px solid var(--line-strong);border-radius:.7rem;padding:.72rem .85rem;transition:border-color .15s,box-shadow .15s;width:100%}
-input::placeholder{color:var(--ink-soft);opacity:.7}
-input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--focus)}
-input:user-invalid{border-color:var(--danger)}
-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234C5D54' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .8rem center;padding-right:2.3rem}
-.hint{font-size:.78rem;color:var(--ink-soft)}
-.hint b{color:var(--accent);font-weight:700}
+.f{display:flex;flex-direction:column;gap:.4rem;min-width:0}
+label,.lb{font-size:.735rem;font-weight:600;letter-spacing:.055em;text-transform:uppercase;color:var(--ink-2)}
+.req{color:var(--accent-ui)}
+input,select{
+  font-family:inherit;font-size:1rem;font-weight:450;color:var(--ink);background:var(--field);
+  border:1px solid var(--line);border-radius:var(--radius);padding:.78rem .9rem;width:100%;
+  transition:border-color .16s,box-shadow .16s,background .16s;-webkit-appearance:none;appearance:none;
+}
+input::placeholder{color:var(--ink-3)}
+input:focus,select:focus{outline:none;border-color:var(--accent-ui);box-shadow:0 0 0 3.5px var(--accent-soft)}
+select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238E948F' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right .85rem center;padding-right:2.4rem;cursor:pointer;
+}
+.hint{font-size:.75rem;color:var(--ink-3);letter-spacing:-.005em}
+.row{display:grid;gap:.7rem;grid-template-columns:1fr;transition:grid-template-columns .28s ease}
+.row.split{grid-template-columns:1fr 1fr}
+#turmaf{display:none;min-width:0}
+#turmaf.on{display:flex;animation:fade .28s ease}
+@keyframes fade{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+
+/* segmented */
+.seg{display:flex;flex-wrap:wrap;gap:.32rem}
+.seg button{
+  flex:1 1 2.4rem;min-width:2.4rem;min-height:2.6rem;font-family:inherit;font-size:.9rem;font-weight:550;
+  color:var(--ink-2);background:var(--field);border:1px solid var(--line);border-radius:10px;
+  cursor:pointer;transition:all .14s;padding:.4rem .1rem
+}
+.seg button:hover{color:var(--ink);border-color:var(--ink-3)}
+.seg button[aria-pressed="true"]{background:var(--accent-ui);border-color:var(--accent-ui);color:var(--accent-ink);font-weight:650}
+.seg button:focus-visible{outline:none;box-shadow:0 0 0 3.5px var(--accent-soft)}
 
 /* chips */
-.chips{display:flex;flex-wrap:wrap;gap:.5rem}
-.chip{font-family:inherit;font-size:.85rem;font-weight:600;color:var(--ink);cursor:pointer;
-  background:var(--card);border:1px solid var(--line-strong);border-radius:999px;padding:.48rem .85rem;
-  display:inline-flex;align-items:center;gap:.4rem;transition:all .14s;user-select:none}
-.chip:hover{border-color:var(--accent)}
-.chip:focus-visible{outline:none;box-shadow:0 0 0 4px var(--focus)}
-.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-.chip .tick{width:.9rem;height:.9rem;opacity:0;margin-left:-.15rem;transition:opacity .14s}
-.chip[aria-pressed="true"] .tick{opacity:1}
-.chipmeta{display:flex;justify-content:space-between;align-items:baseline;gap:1rem}
-.count{font-size:.78rem;font-weight:700;color:var(--ink-soft);font-variant-numeric:tabular-nums}
-.count.ok{color:var(--accent)}
+.chead{display:flex;align-items:baseline;justify-content:space-between;gap:.75rem;flex-wrap:wrap}
+.cnt{font-size:.735rem;font-weight:600;color:var(--ink-3);font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.cnt.ok{color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:.4rem}
+.chip{
+  font-family:inherit;font-size:.855rem;font-weight:500;color:var(--ink-2);cursor:pointer;
+  background:var(--field);border:1px solid var(--line);border-radius:999px;padding:.5rem .8rem;
+  min-height:2.3rem;transition:all .14s;user-select:none;-webkit-tap-highlight-color:transparent
+}
+.chip:hover{color:var(--ink);border-color:var(--ink-3)}
+.chip[aria-pressed="true"]{background:var(--accent-ui);border-color:var(--accent-ui);color:var(--accent-ink);font-weight:600}
+.chip:focus-visible{outline:none;box-shadow:0 0 0 3.5px var(--accent-soft)}
+.link{
+  background:none;border:none;padding:0;font-family:inherit;font-size:.775rem;font-weight:500;
+  color:var(--accent);cursor:pointer;text-decoration:underline;text-underline-offset:2.5px;
+  text-decoration-color:var(--accent-soft);align-self:flex-start;margin-top:.1rem
+}
+.link:hover{text-decoration-color:var(--accent)}
 
-.btn{font-family:inherit;font-size:1rem;font-weight:700;color:var(--accent-ink);background:var(--accent);
-  border:none;border-radius:.75rem;padding:.9rem 1rem;cursor:pointer;transition:background .15s,transform .05s;
-  display:inline-flex;align-items:center;justify-content:center;gap:.5rem;margin-top:.3rem}
-.btn:hover{background:var(--accent-strong)}
+/* submit */
+.btn{
+  font-family:inherit;font-size:.985rem;font-weight:650;color:var(--accent-ink);background:var(--accent-ui);
+  border:none;border-radius:var(--radius);padding:.92rem 1rem;min-height:3rem;cursor:pointer;margin-top:.15rem;
+  display:flex;align-items:center;justify-content:center;gap:.5rem;transition:filter .15s,transform .06s;
+  -webkit-tap-highlight-color:transparent
+}
+.btn:hover{filter:brightness(1.07)}
 .btn:active{transform:translateY(1px)}
-.btn:disabled{opacity:.6;cursor:not-allowed}
-.btn .spin{width:1rem;height:1rem;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;display:none}
-.btn.loading .spin{display:inline-block}.btn.loading .lbl{opacity:.85}
-@keyframes sp{to{transform:rotate(360deg)}}
-.formnote{font-size:.78rem;color:var(--ink-soft);text-align:center;line-height:1.5}
-.err{font-size:.82rem;color:var(--danger);font-weight:600;min-height:1rem}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn:focus-visible{outline:none;box-shadow:0 0 0 3.5px var(--accent-soft)}
+.sp{width:.95rem;height:.95rem;border:2px solid color-mix(in srgb,var(--accent-ink) 35%,transparent);
+  border-top-color:var(--accent-ink);border-radius:50%;animation:spin .7s linear infinite;display:none}
+.btn.load .sp{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.err{font-size:.8rem;color:var(--danger);font-weight:550;min-height:.9rem;letter-spacing:-.005em}
+.foot{font-size:.735rem;color:var(--ink-3);text-align:center;line-height:1.55;margin:0}
 
 /* success */
-.success{display:none;flex-direction:column;align-items:center;text-align:center;gap:1rem;padding:2.5rem 0;animation:rise .5s ease}
-.success.on{display:flex}
-@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-.checkwrap{width:4.2rem;height:4.2rem;border-radius:50%;background:color-mix(in srgb,var(--accent) 16%,transparent);
-  display:flex;align-items:center;justify-content:center;color:var(--accent)}
-.success h2{font-family:"Fraunces",Georgia,serif;font-weight:500;font-size:1.7rem;margin:0}
-.success p{margin:0;color:var(--ink-soft);max-width:32ch}
-.badge-mail{margin-top:.4rem;font-size:.82rem;font-weight:600;color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent);padding:.4rem .8rem;border-radius:999px}
+.done{display:none;flex-direction:column;align-items:center;text-align:center;gap:.85rem;padding:2rem .5rem}
+.done.on{display:flex;animation:up .45s cubic-bezier(.2,.7,.3,1)}
+@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.tick{width:3rem;height:3rem;border-radius:50%;background:var(--accent-soft);color:var(--accent);
+  display:flex;align-items:center;justify-content:center;border:1px solid var(--accent-soft)}
+.done h2{font-size:1.25rem;font-weight:600;letter-spacing:-.02em;margin:0}
+.done p{margin:0;color:var(--ink-2);font-size:.9rem;max-width:30ch}
+.mailtag{font-size:.8rem;font-weight:550;color:var(--accent);background:var(--accent-soft);
+  padding:.4rem .75rem;border-radius:999px;margin-top:.2rem;word-break:break-all}
+
+/* areas info panel */
+.sheet{position:fixed;inset:0;z-index:50;display:none;align-items:flex-end;justify-content:center}
+.sheet.on{display:flex}
+.sheet .veil{position:absolute;inset:0;background:rgba(10,12,11,.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.sheet .body{position:relative;background:var(--bg);border:1px solid var(--glass-line);
+  border-radius:18px 18px 0 0;padding:1.4rem 1.25rem calc(1.4rem + env(safe-area-inset-bottom));
+  width:100%;max-width:27.5rem;animation:slide .3s cubic-bezier(.2,.7,.3,1)}
+@keyframes slide{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
+.sheet h3{margin:0 0 .5rem;font-size:1.05rem;font-weight:600;letter-spacing:-.015em}
+.sheet p{margin:0 0 1.1rem;color:var(--ink-2);font-size:.875rem}
+@media (min-width:640px){.sheet{align-items:center}.sheet .body{border-radius:18px;padding-bottom:1.4rem}}
+
+@media (max-width:400px){
+  h1{font-size:1.42rem}
+  .chip{font-size:.82rem;padding:.46rem .7rem}
+}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 {% endblock %}
@@ -139,171 +188,199 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 {% block base_scripts %}{% endblock %}
 
 {% block content %}
-<div class="jx">
-  <aside class="brand">
-    <div class="crest">
-      <span class="dot"></span>
-      <span class="orgname">Diretório Acadêmico Getúlio Vargas</span>
-    </div>
-    <div class="lede">
-      <div class="wordmark">DAGV</div>
-      <h1>Entre para o time que move a GV.</h1>
-      <p>Faça seu cadastro para acessar a área interna do Diretório — nossas áreas de trabalho, o chat da gestão e os projetos do semestre.</p>
-    </div>
-    <ul class="perks">
-      <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Escolha as áreas em que quer atuar</li>
-      <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Acesso ao chat e às ferramentas do DA</li>
-      <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Exclusivo para estudantes da FGV</li>
-    </ul>
-    <div class="brandfoot">Gestão Nexo · 2026.2 – 2027.1</div>
-  </aside>
+<div class="wrap">
+  <div class="shell">
+    <header class="top" id="top">
+      <div class="mark"><span class="sq"></span><span class="nm">DAGV</span></div>
+      <h1>Cadastro de membro</h1>
+      <p class="sub">Preencha seus dados para solicitar acesso à área interna. A diretoria confirma seu acesso em seguida.</p>
+    </header>
 
-  <main class="panel">
-    <div class="form-shell">
-      <div class="head" id="formhead">
-        <span class="eyebrow">Cadastro de membro</span>
-        <h2>Crie seu acesso</h2>
-        <p>Leva um minuto. Após uma checagem da diretoria, você recebe a confirmação de acesso.</p>
-      </div>
-
+    <div class="card" id="card">
       <form id="signup" novalidate>
-        <div class="field">
-          <label for="full_name">Nome completo</label>
-          <input id="full_name" name="full_name" type="text" placeholder="Seu nome" required autocomplete="name">
+        <div class="f">
+          <label for="full_name">Nome completo <span class="req">*</span></label>
+          <input id="full_name" name="full_name" type="text" autocomplete="name" placeholder="Seu nome" required>
         </div>
-        <div class="field">
-          <label for="fgv_email">E-mail FGV</label>
-          <input id="fgv_email" name="fgv_email" type="email" placeholder="voce@fgv.edu.br" required autocomplete="email">
-          <span class="hint">Precisa terminar em <b>@fgv.edu.br</b>.</span>
+
+        <div class="f">
+          <label for="fgv_email">E-mail FGV <span class="req">*</span></label>
+          <input id="fgv_email" name="fgv_email" type="email" inputmode="email" autocapitalize="off"
+                 autocomplete="email" placeholder="c123456@fgv.edu.br" required>
+          <span class="hint" id="emailhint">Formato institucional: C + 6 ou 7 dígitos.</span>
         </div>
-        <div class="grid2">
-          <div class="field">
-            <label for="semester">Semestre</label>
-            <input id="semester" name="semester" type="number" min="1" max="12" placeholder="1">
+
+        <div class="row">
+          <div class="f">
+            <label for="personal_email">E-mail pessoal <span class="req">*</span></label>
+            <input id="personal_email" name="personal_email" type="email" inputmode="email"
+                   autocapitalize="off" placeholder="voce@gmail.com" required>
           </div>
-          <div class="field">
-            <label for="course">Curso</label>
+          <div class="f">
+            <label for="phone">Telefone <span class="req">*</span></label>
+            <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel"
+                   placeholder="(11) 90000-0000" required>
+          </div>
+        </div>
+
+        <div class="f">
+          <span class="lb">Semestre <span class="req">*</span></span>
+          <div class="seg" id="sem" role="group" aria-label="Semestre"></div>
+        </div>
+
+        <div class="row" id="courserow">
+          <div class="f">
+            <label for="course">Curso <span class="req">*</span></label>
             <select id="course" name="course" required>
               <option value="" disabled selected>Selecione…</option>
-              <option>Administração de Empresas</option>
-              <option>Administração Pública</option>
-              <option>Economia</option>
+              <option value="Administração de Empresas">Adm. de Empresas</option>
+              <option value="Administração Pública">Adm. Pública</option>
+              <option value="Economia">Economia</option>
+            </select>
+          </div>
+          <div class="f" id="turmaf">
+            <label for="turma">Turma <span class="req">*</span></label>
+            <select id="turma" name="turma">
+              <option value="" disabled selected>Turma…</option>
+              <option>AE1</option><option>AE2</option><option>AE3</option>
+              <option>AE4 (OPEN)</option><option>AE5</option><option>AE6</option>
             </select>
           </div>
         </div>
-        <div class="grid2">
-          <div class="field">
-            <label for="phone">Telefone <span class="opt">(opcional)</span></label>
-            <input id="phone" name="phone" type="tel" placeholder="(11) 90000-0000" autocomplete="tel">
-          </div>
-          <div class="field">
-            <label for="personal_email">E-mail pessoal <span class="opt">(opcional)</span></label>
-            <input id="personal_email" name="personal_email" type="email" placeholder="voce@gmail.com">
-          </div>
-        </div>
 
-        <div class="field">
-          <div class="chipmeta">
-            <label>Áreas de interesse</label>
-            <span class="count" id="count">0 / 3 mínimo</span>
+        <div class="f">
+          <div class="chead">
+            <span class="lb">Áreas de interesse <span class="req">*</span></span>
+            <span class="cnt" id="cnt">0 de 3</span>
           </div>
           <div class="chips" id="chips" role="group" aria-label="Áreas de interesse"></div>
+          <button type="button" class="link" id="areasbtn">Não conhece as áreas?</button>
         </div>
 
         <div class="err" id="err" role="alert"></div>
-        <button class="btn" type="submit" id="submit">
-          <span class="spin"></span><span class="lbl">Enviar cadastro</span>
-        </button>
-        <p class="formnote">Ao enviar, você concorda que a diretoria avalie seu cadastro. O acesso é liberado manualmente.</p>
+        <button class="btn" type="submit" id="go"><span class="sp"></span><span>Enviar cadastro</span></button>
+        <p class="foot">O acesso é liberado manualmente pela diretoria após conferência.</p>
       </form>
 
-      <div class="success" id="success">
-        <div class="checkwrap">
-          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+      <div class="done" id="done">
+        <div class="tick">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
         </div>
-        <h2>Cadastro enviado!</h2>
-        <p>Recebemos seus dados. Você receberá uma confirmação assim que tiver acesso à área interna do DAGV.</p>
-        <span class="badge-mail" id="successmail"></span>
+        <h2>Cadastro enviado</h2>
+        <p>Você receberá a confirmação assim que seu acesso à área interna for liberado.</p>
+        <span class="mailtag" id="donemail"></span>
       </div>
     </div>
-  </main>
+  </div>
+</div>
+
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheettitle">
+  <div class="veil" data-close></div>
+  <div class="body">
+    <h3 id="sheettitle">As áreas do DAGV</h3>
+    <p>Um guia com a descrição de cada área estará disponível em breve. Se estiver em dúvida, escolha as que mais combinam com você — dá para entrar em outras depois.</p>
+    <button class="btn" type="button" data-close>Entendi</button>
+  </div>
 </div>
 {% endblock %}
 
 {% block script %}
 <script>
 (function(){
-  var AREAS = [
-    ["VPAE","Adm. Empresas"],["VPAP","Adm. Pública"],["VPEcono","Economia"],
-    ["Cultural","Cultural"],["Eventos","Eventos"],["Financeiro","Financeiro"],
-    ["Criativo","Criativo"],["Entidades","Entidades"],["Institucional","Institucional"],
-    ["Integração","Integração"],["Parcerias","Parcerias"],["Pessoas","Pessoas"],
-    ["Planejamento","Planejamento"],["Produtos","Produtos"],["Projetos","Projetos"]
-  ];
-  var MIN = 3, selected = new Set();
-  var chips = document.getElementById("chips");
-  var count = document.getElementById("count");
-  var tick = '<svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+  var AREAS=["Acadêmicos","Cultural","Eventos","Financeiro","Criativo","Entidades","Institucional",
+             "Integração","Parcerias","Pessoas","Planejamento","Produtos","Projetos"];
+  var MIN=3, sel=new Set(), semester="";
+  var $=function(id){return document.getElementById(id)};
 
-  AREAS.forEach(function(a){
-    var b = document.createElement("button");
-    b.type = "button"; b.className = "chip"; b.setAttribute("aria-pressed","false");
-    b.dataset.code = a[0]; b.innerHTML = tick + "<span>"+a[1]+"</span>";
-    b.addEventListener("click", function(){
-      if(selected.has(a[0])){ selected.delete(a[0]); b.setAttribute("aria-pressed","false"); }
-      else { selected.add(a[0]); b.setAttribute("aria-pressed","true"); }
-      updateCount();
-    });
-    chips.appendChild(b);
-  });
-  function updateCount(){
-    var n = selected.size;
-    count.textContent = n + " / 3 mínimo";
-    count.classList.toggle("ok", n >= MIN);
-  }
-
-  var form = document.getElementById("signup");
-  var err = document.getElementById("err");
-  var btn = document.getElementById("submit");
-
-  form.addEventListener("submit", function(e){
-    e.preventDefault();
-    err.textContent = "";
-    var fd = {
-      full_name: form.full_name.value.trim(),
-      fgv_email: form.fgv_email.value.trim(),
-      personal_email: form.personal_email.value.trim(),
-      phone: form.phone.value.trim(),
-      semester: form.semester.value,
-      course: form.course.value,
-      desired_areas: Array.from(selected).join(", ")
+  // semester segmented
+  var semv=["1","2","3","4","5","6","7","8","8+"];
+  semv.forEach(function(v){
+    var b=document.createElement("button");
+    b.type="button"; b.textContent=v; b.setAttribute("aria-pressed","false");
+    b.onclick=function(){
+      semester=v;
+      Array.prototype.forEach.call($("sem").children,function(c){c.setAttribute("aria-pressed", c===b?"true":"false")});
     };
-    if(!fd.full_name){ err.textContent = "Informe seu nome completo."; return; }
-    if(!/@fgv\.edu\.br$/i.test(fd.fgv_email)){ err.textContent = "Use seu e-mail institucional @fgv.edu.br."; return; }
-    if(!fd.course){ err.textContent = "Selecione seu curso."; return; }
-    if(selected.size < MIN){ err.textContent = "Escolha pelo menos "+MIN+" áreas de interesse."; return; }
+    $("sem").appendChild(b);
+  });
 
-    btn.classList.add("loading"); btn.disabled = true;
-    fetch("/api/method/dagv.api.submit_registration", {
+  // area chips
+  AREAS.forEach(function(a){
+    var b=document.createElement("button");
+    b.type="button"; b.className="chip"; b.textContent=a; b.setAttribute("aria-pressed","false");
+    b.onclick=function(){
+      if(sel.has(a)){sel.delete(a);b.setAttribute("aria-pressed","false");}
+      else{sel.add(a);b.setAttribute("aria-pressed","true");}
+      var n=sel.size; var c=$("cnt");
+      c.textContent = n>=MIN ? (n+" selecionadas") : (n+" de "+MIN);
+      c.classList.toggle("ok", n>=MIN);
+    };
+    $("chips").appendChild(b);
+  });
+
+  // course → turma split
+  $("course").onchange=function(){
+    var isAE = this.value==="Administração de Empresas";
+    $("courserow").classList.toggle("split", isAE);
+    $("turmaf").classList.toggle("on", isAE);
+    if(!isAE){ $("turma").value=""; }
+  };
+
+  // areas sheet
+  $("areasbtn").onclick=function(){$("sheet").classList.add("on")};
+  $("sheet").addEventListener("click",function(e){ if(e.target.hasAttribute("data-close")) $("sheet").classList.remove("on"); });
+  document.addEventListener("keydown",function(e){ if(e.key==="Escape") $("sheet").classList.remove("on"); });
+
+  // soft warning on email format
+  var RE=/^c\d{6,7}@fgv\.edu\.br$/i;
+  $("fgv_email").addEventListener("blur",function(){
+    var v=this.value.trim(); var h=$("emailhint");
+    if(v && !RE.test(v)){ h.textContent="Confira: o padrão costuma ser C + 6 ou 7 dígitos (ex.: c123456@fgv.edu.br)."; h.style.color="var(--danger)"; }
+    else { h.textContent="Formato institucional: C + 6 ou 7 dígitos."; h.style.color=""; }
+  });
+
+  var form=$("signup"), err=$("err"), go=$("go");
+  form.addEventListener("submit",function(e){
+    e.preventDefault();
+    err.textContent="";
+    var d={
+      full_name:form.full_name.value.trim(),
+      fgv_email:form.fgv_email.value.trim(),
+      personal_email:form.personal_email.value.trim(),
+      phone:form.phone.value.trim(),
+      semester:semester,
+      course:form.course.value,
+      turma:$("turma").value,
+      desired_areas:Array.from(sel).join(", ")
+    };
+    if(!d.full_name) return err.textContent="Informe seu nome completo.";
+    if(!/@fgv\.edu\.br$/i.test(d.fgv_email)) return err.textContent="Use seu e-mail institucional @fgv.edu.br.";
+    if(!d.personal_email||!/@/.test(d.personal_email)) return err.textContent="Informe um e-mail pessoal válido.";
+    if(!d.phone) return err.textContent="Informe seu telefone.";
+    if(!d.semester) return err.textContent="Selecione seu semestre.";
+    if(!d.course) return err.textContent="Selecione seu curso.";
+    if(d.course==="Administração de Empresas" && !d.turma) return err.textContent="Selecione sua turma.";
+    if(sel.size<MIN) return err.textContent="Escolha pelo menos "+MIN+" áreas de interesse.";
+
+    go.classList.add("load"); go.disabled=true;
+    fetch("/api/method/dagv.api.submit_registration",{
       method:"POST",
       headers:{"Content-Type":"application/json","X-Frappe-CSRF-Token":(window.frappe&&frappe.csrf_token)||"guest"},
-      body: JSON.stringify(fd)
-    }).then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
+      body:JSON.stringify(d)
+    }).then(function(r){return r.json().then(function(j){return{ok:r.ok,j:j}})})
       .then(function(res){
         if(res.ok){
-          document.getElementById("formhead").style.display="none";
-          form.style.display="none";
-          document.getElementById("successmail").textContent = fd.fgv_email;
-          document.getElementById("success").classList.add("on");
-        } else {
-          var msg = (res.j && (res.j._server_messages || res.j.exception)) || "";
-          try{ msg = JSON.parse(res.j._server_messages)[0]; msg = JSON.parse(msg).message; }catch(e){}
-          err.textContent = msg ? msg.replace(/<[^>]+>/g,"") : "Não foi possível enviar. Tente novamente.";
-          btn.classList.remove("loading"); btn.disabled = false;
+          $("top").style.display="none"; form.style.display="none";
+          $("donemail").textContent=d.fgv_email; $("done").classList.add("on");
+        }else{
+          var m="";
+          try{ m=JSON.parse(JSON.parse(res.j._server_messages)[0]).message; }catch(_){ m=res.j.exception||""; }
+          err.textContent=m?m.replace(/<[^>]+>/g,""):"Não foi possível enviar. Tente novamente.";
+          go.classList.remove("load"); go.disabled=false;
         }
       }).catch(function(){
-        err.textContent = "Erro de conexão. Verifique sua internet e tente novamente.";
-        btn.classList.remove("loading"); btn.disabled = false;
+        err.textContent="Erro de conexão. Verifique sua internet e tente novamente.";
+        go.classList.remove("load"); go.disabled=false;
       });
   });
 })();

@@ -12,7 +12,9 @@
   "phone",
   "semester",
   "course",
+  "turma",
   "desired_areas",
+  "email_format_ok",
   "status"
  ],
  "fields": [
@@ -44,8 +46,9 @@
   },
   {
    "fieldname": "semester",
-   "fieldtype": "Int",
-   "label": "Semester"
+   "fieldtype": "Select",
+   "label": "Semester",
+   "options": "\n1\n2\n3\n4\n5\n6\n7\n8\n8+"
   },
   {
    "fieldname": "course",
@@ -53,6 +56,20 @@
    "label": "Course",
    "options": "Administração de Empresas\nAdministração Pública\nEconomia",
    "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.course=='Administração de Empresas'",
+   "fieldname": "turma",
+   "fieldtype": "Select",
+   "label": "Turma",
+   "options": "\nAE1\nAE2\nAE3\nAE4 (OPEN)\nAE5\nAE6"
+  },
+  {
+   "default": "1",
+   "description": "0 = FGV email didn't match the C+6/7-digit pattern; worth a second look before approving.",
+   "fieldname": "email_format_ok",
+   "fieldtype": "Check",
+   "label": "Email Format OK"
   },
   {
    "description": "Areas of interest (Phase 1 upgrades this to a picklist of the 15 areas)",
