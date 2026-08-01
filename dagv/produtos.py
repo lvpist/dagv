@@ -216,3 +216,75 @@ def recent_movements(limit=15):
             r.update(detail[0])
         r["who"] = frappe.db.get_value("User", r["owner"], "full_name") or r["owner"]
     return [r for r in rows if r.get("item_code")]
+
+
+# ---------------------------------------------------------------------------
+# Native ERPNext setup
+# ---------------------------------------------------------------------------
+# The default strategy for every area is to configure ERPNext itself rather than
+# build a page over it — a workspace, shortcuts and sensible defaults are all
+# editable later by a non-technical admin, which custom code never is.
+
+NATIVE_WORKSPACE = "Produtos"
+
+
+def setup_native_workspace():
+    """Build the area's ERPNext workspace: a short list of things they do.
+
+    Anchored to the Stock module so it appears only for members whose areas
+    unlock Stock, and stays fully editable in ERPNext's own workspace editor.
+    """
+    ensure_setup()
+    warehouse = _warehouse()
+
+    shortcuts = [
+        {"label": "Produtos", "type": "DocType", "link_to": "Item", "color": "Grey"},
+        {"label": "Entradas e saídas", "type": "DocType", "link_to": "Stock Entry", "color": "Blue"},
+        {"label": "Saldo em estoque", "type": "Report", "link_to": "Stock Balance",
+         "doc_view": "Report", "color": "Green"},
+    ]
+
+    doc = (
+        frappe.get_doc("Workspace", NATIVE_WORKSPACE)
+        if frappe.db.exists("Workspace", NATIVE_WORKSPACE)
+        else frappe.new_doc("Workspace")
+    )
+    doc.name = NATIVE_WORKSPACE
+    doc.title = NATIVE_WORKSPACE
+    doc.label = NATIVE_WORKSPACE
+    doc.module = "Stock"
+    doc.public = 1
+    doc.icon = "retail"
+    doc.sequence_id = 2
+
+    doc.set("shortcuts", [])
+    for s in shortcuts:
+        doc.append("shortcuts", s)
+
+    doc.set("links", [])
+    doc.append("links", {"type": "Card Break", "label": "Estoque", "link_count": 3})
+    for label, link_to, link_type in [
+        ("Produtos", "Item", "DocType"),
+        ("Movimentações", "Stock Entry", "DocType"),
+        ("Saldo em estoque", "Stock Balance", "Report"),
+    ]:
+        row = {"type": "Link", "label": label, "link_type": link_type, "link_to": link_to}
+        if link_type == "Report":
+            row["is_query_report"] = 1
+        doc.append("links", row)
+
+    content = [
+        {"id": "prdhdr0001", "type": "header",
+         "data": {"text": "<span class=\"h4\"><b>Produtos</b></span>", "col": 12}},
+    ]
+    for i, s in enumerate(shortcuts):
+        content.append({"id": f"prdsc{i:05d}", "type": "shortcut",
+                        "data": {"shortcut_name": s["label"], "col": 4}})
+    content.append({"id": "prdcrd0001", "type": "card",
+                    "data": {"card_name": "Estoque", "col": 4}})
+    doc.content = frappe.as_json(content)
+
+    doc.flags.ignore_permissions = True
+    doc.save() if not doc.is_new() else doc.insert()
+    frappe.db.commit()
+    return {"workspace": doc.name, "warehouse": warehouse}
