@@ -12,6 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
+  color-scheme:light;
   --bg:#FAFAF8; --bg-2:#F1F1EE;
   --glass:rgba(255,255,255,.66); --glass-line:rgba(25,34,32,.09);
   --ink:#191F1D; --ink-2:#666E6A; --ink-3:#8E948F;
@@ -24,6 +25,7 @@
 }
 @media (prefers-color-scheme:dark){
   :root{
+    color-scheme:dark;
     --bg:#0A0C0B; --bg-2:#111413;
     --glass:rgba(255,255,255,.045); --glass-line:rgba(255,255,255,.09);
     --ink:#ECEFEA; --ink-2:#969C96; --ink-3:#6E746E;
@@ -35,12 +37,14 @@
   }
 }
 :root[data-theme="light"]{
+  color-scheme:light;
   --bg:#FAFAF8; --bg-2:#F1F1EE; --glass:rgba(255,255,255,.66); --glass-line:rgba(25,34,32,.09);
   --ink:#191F1D; --ink-2:#666E6A; --ink-3:#8E948F; --line:rgba(25,34,32,.13); --line-2:rgba(25,34,32,.07);
   --field:rgba(255,255,255,.75); --accent:#8F7A14; --accent-ui:#B69B1A; --accent-ink:#141812;
   --accent-soft:rgba(182,155,26,.13); --danger:#A5402C;
 }
 :root[data-theme="dark"]{
+  color-scheme:dark;
   --bg:#0A0C0B; --bg-2:#111413; --glass:rgba(255,255,255,.045); --glass-line:rgba(255,255,255,.09);
   --ink:#ECEFEA; --ink-2:#969C96; --ink-3:#6E746E; --line:rgba(255,255,255,.12); --line-2:rgba(255,255,255,.07);
   --field:rgba(255,255,255,.04); --accent:#D9BE3D; --accent-ui:#D9BE3D; --accent-ink:#12150E;
@@ -49,6 +53,23 @@
 
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:var(--bg)}
+
+/* Frappe's website CSS ships Bootstrap, which restyles a/button/select on
+   hover & focus and would otherwise repaint our text mid-interaction (yellow
+   link turning black, invisible in dark mode). Pin our own colours across
+   every state, and let native popups follow the theme via color-scheme. */
+.wrap a,.wrap a:link,.wrap a:visited,.wrap a:hover,.wrap a:active,.wrap a:focus,
+.sheet a,.sheet a:hover,.sheet a:focus{color:var(--accent);text-decoration-color:var(--accent-soft)}
+.sheet a:hover,.wrap a:hover{text-decoration-color:var(--accent)}
+.wrap button,.sheet button{color:inherit}
+.wrap .btn,.wrap .btn:hover,.wrap .btn:focus,.wrap .btn:active,
+.sheet .btn,.sheet .btn:hover,.sheet .btn:focus,.sheet .btn:active{
+  color:var(--accent-ink);background:var(--accent-ui);border:none}
+.wrap .chip[aria-pressed="true"],.wrap .chip[aria-pressed="true"]:hover{
+  color:var(--accent-ink);background:var(--accent-ui)}
+.wrap .info:hover,.wrap .info:focus{color:var(--accent)}
+/* native <select> popup: OS-rendered, so it needs explicit colours */
+.wrap select option{background-color:var(--bg);color:var(--ink)}
 body{
   font-family:"Geist","Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;
