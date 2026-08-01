@@ -99,8 +99,11 @@ select{
   background-repeat:no-repeat;background-position:right .85rem center;padding-right:2.4rem;cursor:pointer;
 }
 .hint{font-size:.75rem;color:var(--ink-3);letter-spacing:-.005em}
-.row{display:grid;gap:1.05rem;grid-template-columns:1fr;width:100%;min-width:0}
-@media (min-width:380px){.row.split{grid-template-columns:1fr 1fr;gap:.7rem}}
+/* NOTE: never name these `.row`/`.col` — Frappe's website CSS ships Bootstrap,
+   whose `.row` has `margin: 0 -15px` and silently drags the field out of the
+   card's padding. Keep custom class names out of Bootstrap's namespace. */
+.pair{display:grid;gap:1.05rem;grid-template-columns:1fr;width:100%;min-width:0;margin:0}
+@media (min-width:380px){.pair.split{grid-template-columns:1fr 1fr;gap:.7rem}}
 #turmaf{display:none;min-width:0}
 #turmaf.on{display:flex;animation:fade .28s ease}
 @keyframes fade{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
@@ -210,7 +213,7 @@ select{
           <span class="hint" id="emailhint">Formato institucional: C + 6 ou 7 dígitos.</span>
         </div>
 
-        <div class="row">
+        <div class="pair">
           <div class="f">
             <label for="personal_email">E-mail pessoal</label>
             <input id="personal_email" name="personal_email" type="email" inputmode="email"
@@ -232,7 +235,7 @@ select{
           </select>
         </div>
 
-        <div class="row" id="courserow">
+        <div class="pair" id="courserow">
           <div class="f">
             <label for="course">Curso <span class="req">*</span></label>
             <select id="course" name="course" required>
