@@ -137,6 +137,8 @@ def apply_membership(membership):
         if area.erp_role and area.erp_role not in frappe.get_roles(email):
             frappe.get_doc("User", email).add_roles(area.erp_role)
 
+        frappe.clear_cache(user=email)
+
     elif membership.status in REVOKED:
         if area.raven_workspace:
             _remove_from_workspace(area.raven_workspace, email)
@@ -188,22 +190,26 @@ def _remove_from_workspace(workspace, email):
 
 def _remove_role(email, role):
     """Drop a role, but never one another approved area still depends on."""
-    still_needed = frappe.db.exists(
+    shared = frappe.get_all(
         "DAGV Membership",
-        {"member": email, "status": APPROVED, "area": ["!=", ""]},
+        filters={"member": email, "status": APPROVED},
+        pluck="area",
     )
-    if still_needed:
-        shared = frappe.get_all(
-            "DAGV Membership",
-            filters={"member": email, "status": APPROVED},
-            pluck="area",
-        )
-        roles_in_use = {
-            frappe.db.get_value("DAGV Area", a, "erp_role") for a in shared
-        }
-        if role in roles_in_use:
-            return
+    roles_in_use = {frappe.db.get_value("DAGV Area", a, "erp_role") for a in shared}
+    if role in roles_in_use:
+        return
 
-    name = frappe.db.exists("Has Role", {"parent": email, "role": role})
-    if name:
-        frappe.delete_doc("Has Role", name, force=1, ignore_permissions=True)
+    # Go through the User document — "Has Role" is a child table, so deleting it
+    # directly is unreliable, and frappe.get_roles() caches per user.
+    user = frappe.get_doc("User", email)
+    user.remove_roles(role)
+    frappe.clear_cache(user=email)
+
+
+def force_enable_raven_user(doc, method=None):
+    """Raven's ``auto_add_system_users`` creates Raven Users disabled, and a
+    disabled Raven User is filtered out of every channel/workspace member list —
+    the member then sees "you are not a member" while the records say otherwise.
+    Enable on creation so provisioning can't be silently undone."""
+    if not doc.enabled:
+        doc.db_set("enabled", 1, update_modified=False)

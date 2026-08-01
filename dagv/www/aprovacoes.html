@@ -1,0 +1,269 @@
+{% extends "templates/base.html" %}
+
+{% block title %}Aprovações · DAGV{% endblock %}
+
+{% block head_include %}
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+{% endblock %}
+
+{% block style %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light;
+  --bg:#FAFAF8; --bg-2:#F1F1EE;
+  --glass:rgba(255,255,255,.66); --glass-line:rgba(25,34,32,.09);
+  --ink:#191F1D; --ink-2:#666E6A; --ink-3:#8E948F;
+  --line:rgba(25,34,32,.13); --field:rgba(255,255,255,.75);
+  --accent:#8F7A14; --accent-ui:#B69B1A; --accent-ink:#141812; --accent-soft:rgba(182,155,26,.13);
+  --ok:#2F7D4F; --ok-soft:rgba(47,125,79,.12);
+  --danger:#A5402C; --danger-soft:rgba(165,64,44,.12);
+  --radius:14px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    color-scheme:dark;
+    --bg:#0A0C0B; --bg-2:#111413;
+    --glass:rgba(255,255,255,.045); --glass-line:rgba(255,255,255,.09);
+    --ink:#ECEFEA; --ink-2:#969C96; --ink-3:#6E746E;
+    --line:rgba(255,255,255,.12); --field:rgba(255,255,255,.04);
+    --accent:#D9BE3D; --accent-ui:#D9BE3D; --accent-ink:#12150E; --accent-soft:rgba(217,190,61,.14);
+    --ok:#59BE85; --ok-soft:rgba(89,190,133,.14);
+    --danger:#DE8067; --danger-soft:rgba(222,128,103,.14);
+  }
+}
+:root[data-theme="light"]{color-scheme:light;--bg:#FAFAF8;--bg-2:#F1F1EE;--glass:rgba(255,255,255,.66);
+  --glass-line:rgba(25,34,32,.09);--ink:#191F1D;--ink-2:#666E6A;--ink-3:#8E948F;--line:rgba(25,34,32,.13);
+  --field:rgba(255,255,255,.75);--accent:#8F7A14;--accent-ui:#B69B1A;--accent-ink:#141812;
+  --accent-soft:rgba(182,155,26,.13);--ok:#2F7D4F;--ok-soft:rgba(47,125,79,.12);--danger:#A5402C;--danger-soft:rgba(165,64,44,.12)}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0A0C0B;--bg-2:#111413;--glass:rgba(255,255,255,.045);
+  --glass-line:rgba(255,255,255,.09);--ink:#ECEFEA;--ink-2:#969C96;--ink-3:#6E746E;--line:rgba(255,255,255,.12);
+  --field:rgba(255,255,255,.04);--accent:#D9BE3D;--accent-ui:#D9BE3D;--accent-ink:#12150E;
+  --accent-soft:rgba(217,190,61,.14);--ok:#59BE85;--ok-soft:rgba(89,190,133,.14);--danger:#DE8067;--danger-soft:rgba(222,128,103,.14)}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg)}
+body{font-family:"Geist","Inter",system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);
+  line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100dvh;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:-20% -10% auto -10%;height:55vh;pointer-events:none;z-index:0;
+  background:radial-gradient(46% 60% at 78% 12%,var(--accent-soft),transparent 70%);filter:blur(46px)}
+
+/* Frappe ships Bootstrap: pin our colours and avoid its class names. */
+.wrap a,.wrap a:hover,.wrap a:focus{color:var(--accent)}
+.wrap h1,.wrap h2,.wrap h3{color:var(--ink)}
+.wrap select option{background-color:var(--bg);color:var(--ink)}
+
+.wrap{position:relative;z-index:1;min-height:100dvh;display:flex;flex-direction:column;align-items:center;
+  padding:clamp(1.25rem,4vw,2.5rem) 1.15rem}
+.shell{width:100%;max-width:44rem;margin-block:auto;display:flex;flex-direction:column;gap:1.4rem}
+
+.top{display:flex;flex-direction:column;gap:.5rem;padding-left:.15rem}
+.dagv-mark{display:flex;align-items:center;gap:.55rem;background:none}
+.dagv-mark .sq{width:.62rem;height:.62rem;border-radius:2px;background:var(--accent-ui);transform:rotate(45deg)}
+.dagv-mark .nm{font-size:.7rem;font-weight:600;letter-spacing:.19em;text-transform:uppercase;color:var(--ink-2)}
+.wrap h1{font-size:1.6rem;font-weight:600;letter-spacing:-.022em;margin:.15rem 0 0;line-height:1.15}
+.sub{margin:0;color:var(--ink-2);font-size:.9rem}
+
+.tabs{display:flex;gap:.35rem;flex-wrap:wrap}
+.tab{font-family:inherit;font-size:.875rem;font-weight:550;color:var(--ink-2);background:var(--field);
+  border:1px solid var(--line);border-radius:999px;padding:.5rem .9rem;min-height:2.5rem;cursor:pointer;transition:all .14s}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{background:var(--accent-ui);border-color:var(--accent-ui);color:var(--accent-ink);font-weight:650}
+.tab .badge{margin-left:.4rem;font-variant-numeric:tabular-nums;opacity:.75}
+
+.card{width:100%;background:var(--glass);border:1px solid var(--glass-line);border-radius:18px;
+  backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4);
+  padding:clamp(1rem,3vw,1.35rem);display:flex;flex-direction:column;gap:.85rem}
+.who{display:flex;align-items:baseline;gap:.55rem;flex-wrap:wrap}
+.who .nm2{font-size:1.02rem;font-weight:600;letter-spacing:-.012em}
+.who .em{font-size:.82rem;color:var(--ink-3);word-break:break-all}
+.meta{display:flex;flex-wrap:wrap;gap:.4rem}
+.pill{font-size:.75rem;font-weight:550;color:var(--ink-2);background:var(--field);border:1px solid var(--line);
+  border-radius:999px;padding:.28rem .6rem}
+.pill.warn{color:var(--danger);border-color:var(--danger-soft);background:var(--danger-soft)}
+.pill.area{color:var(--accent);border-color:var(--accent-soft);background:var(--accent-soft)}
+
+.lb{font-size:.72rem;font-weight:600;letter-spacing:.055em;text-transform:uppercase;color:var(--ink-2)}
+.chips{display:flex;flex-wrap:wrap;gap:.4rem}
+.chip{font-family:inherit;font-size:.845rem;font-weight:500;color:var(--ink-2);cursor:pointer;background:var(--field);
+  border:1px solid var(--line);border-radius:999px;padding:.5rem .8rem;min-height:2.4rem;transition:all .14s;
+  -webkit-tap-highlight-color:transparent}
+.chip:hover{color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--accent-ui);border-color:var(--accent-ui);color:var(--accent-ink);font-weight:600}
+.chip[disabled]{opacity:.35;cursor:not-allowed}
+
+.acts{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.15rem}
+.act{font-family:inherit;font-size:.9rem;font-weight:650;border-radius:12px;padding:.7rem 1rem;min-height:2.75rem;
+  cursor:pointer;border:1px solid transparent;transition:filter .15s,transform .06s;flex:1 1 8rem}
+.act:active{transform:translateY(1px)}
+.act.yes{background:var(--accent-ui);color:var(--accent-ink)}
+.act.yes:hover{filter:brightness(1.07)}
+.act.no{background:transparent;color:var(--danger);border-color:var(--danger-soft)}
+.act.no:hover{background:var(--danger-soft)}
+.act[disabled]{opacity:.5;cursor:not-allowed}
+
+.empty{text-align:center;color:var(--ink-3);font-size:.9rem;padding:2.5rem 1rem}
+.toast{position:fixed;left:50%;bottom:1.25rem;transform:translateX(-50%);z-index:60;background:var(--ink);
+  color:var(--bg);font-size:.875rem;font-weight:550;padding:.65rem 1rem;border-radius:999px;opacity:0;
+  pointer-events:none;transition:opacity .2s}
+.toast.on{opacity:1}
+.err{color:var(--danger);font-size:.85rem;font-weight:550}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+{% endblock %}
+
+{% block banner %}{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block base_scripts %}{% endblock %}
+
+{% block content %}
+<div class="wrap">
+  <div class="shell">
+    <header class="top">
+      <div class="dagv-mark"><span class="sq"></span><span class="nm">DAGV</span></div>
+      <h1>Aprovações</h1>
+      <p class="sub">Decida quem entra no DAGV e nas suas áreas.</p>
+    </header>
+
+    <div class="tabs" role="tablist">
+      <button class="tab" id="tab-reg" role="tab" aria-selected="true">Cadastros <span class="badge" id="c-reg">0</span></button>
+      <button class="tab" id="tab-area" role="tab" aria-selected="false">Entradas em áreas <span class="badge" id="c-area">0</span></button>
+    </div>
+
+    <div id="list"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+{% endblock %}
+
+{% block script %}
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  var view="reg", AREAS=[], regs=[], reqs=[], picks={};
+
+  function call(method, body){
+    return fetch("/api/method/"+method,{
+      method: body?"POST":"GET",
+      headers:{"Content-Type":"application/json","X-Frappe-CSRF-Token":(window.frappe&&frappe.csrf_token)||""},
+      body: body?JSON.stringify(body):undefined
+    }).then(function(r){return r.json().then(function(j){ if(!r.ok){ throw msgOf(j); } return j.message; })});
+  }
+  function msgOf(j){
+    try{ return JSON.parse(JSON.parse(j._server_messages)[0]).message.replace(/<[^>]+>/g,""); }
+    catch(e){ return "Algo deu errado. Tente novamente."; }
+  }
+  function toast(t){ var el=$("toast"); el.textContent=t; el.classList.add("on"); setTimeout(function(){el.classList.remove("on")},2200); }
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]}); }
+
+  function load(){
+    Promise.all([
+      call("dagv.approvals.areas_for_picker"),
+      call("dagv.approvals.pending_registrations").catch(function(){return []}),
+      call("dagv.approvals.pending_requests").catch(function(){return []})
+    ]).then(function(r){
+      AREAS=r[0]||[]; regs=r[1]||[]; reqs=r[2]||[];
+      $("c-reg").textContent=regs.length; $("c-area").textContent=reqs.length;
+      render();
+    }).catch(function(e){ $("list").innerHTML='<p class="err">'+esc(e)+'</p>'; });
+  }
+
+  function render(){
+    var host=$("list"); host.innerHTML="";
+    var rows = view==="reg" ? regs : reqs;
+    if(!rows.length){
+      host.innerHTML='<div class="empty">Nada pendente por aqui. 🎉</div>';
+      return;
+    }
+    rows.forEach(function(row){ host.appendChild(view==="reg" ? regCard(row) : reqCard(row)); });
+  }
+
+  function regCard(r){
+    var el=document.createElement("div"); el.className="card";
+    var wanted=(r.desired_areas||"").split(",").map(function(s){return s.trim()}).filter(Boolean);
+    picks[r.name] = picks[r.name] || wanted.slice();
+
+    var meta=[];
+    if(r.course) meta.push('<span class="pill">'+esc(r.course)+(r.turma?" · "+esc(r.turma):"")+'</span>');
+    if(r.semester) meta.push('<span class="pill">'+esc(r.semester)+'º sem</span>');
+    if(r.phone) meta.push('<span class="pill">'+esc(r.phone)+'</span>');
+    if(!r.email_format_ok) meta.push('<span class="pill warn">e-mail fora do padrão</span>');
+
+    el.innerHTML=
+      '<div class="who"><span class="nm2">'+esc(r.full_name)+'</span><span class="em">'+esc(r.fgv_email)+'</span></div>'+
+      '<div class="meta">'+meta.join("")+'</div>'+
+      '<span class="lb">Áreas que ele(a) entra agora</span>'+
+      '<div class="chips"></div>'+
+      '<div class="acts">'+
+        '<button class="act yes">Aprovar e liberar</button>'+
+        '<button class="act no">Recusar</button>'+
+      '</div>';
+
+    var chips=el.querySelector(".chips");
+    AREAS.forEach(function(a){
+      var b=document.createElement("button"); b.type="button"; b.className="chip";
+      var blocked = a.required_course && a.required_course!==r.course;
+      b.textContent=a.name;
+      if(blocked){ b.disabled=true; b.title="Exclusiva de "+a.required_course; }
+      var on=picks[r.name].indexOf(a.name)>-1 && !blocked;
+      b.setAttribute("aria-pressed", on?"true":"false");
+      b.onclick=function(){
+        var i=picks[r.name].indexOf(a.name);
+        if(i>-1){ picks[r.name].splice(i,1); b.setAttribute("aria-pressed","false"); }
+        else{ picks[r.name].push(a.name); b.setAttribute("aria-pressed","true"); }
+      };
+      chips.appendChild(b);
+    });
+
+    var yes=el.querySelector(".act.yes"), no=el.querySelector(".act.no");
+    yes.onclick=function(){
+      yes.disabled=no.disabled=true;
+      call("dagv.approvals.approve_registration",{registration:r.name, areas:picks[r.name]})
+        .then(function(res){ toast("Aprovado — "+(res.granted||[]).length+" área(s) liberada(s)"); load(); })
+        .catch(function(e){ toast(e); yes.disabled=no.disabled=false; });
+    };
+    no.onclick=function(){
+      yes.disabled=no.disabled=true;
+      call("dagv.approvals.approve_registration",{registration:r.name, reject:true})
+        .then(function(){ toast("Cadastro recusado"); load(); })
+        .catch(function(e){ toast(e); yes.disabled=no.disabled=false; });
+    };
+    return el;
+  }
+
+  function reqCard(r){
+    var el=document.createElement("div"); el.className="card";
+    var meta=[];
+    meta.push('<span class="pill area">'+esc(r.area)+'</span>');
+    if(r.course) meta.push('<span class="pill">'+esc(r.course)+(r.turma?" · "+esc(r.turma):"")+'</span>');
+    if(r.semester) meta.push('<span class="pill">'+esc(r.semester)+'º sem</span>');
+
+    el.innerHTML=
+      '<div class="who"><span class="nm2">'+esc(r.member_name||r.member)+'</span><span class="em">'+esc(r.member)+'</span></div>'+
+      '<div class="meta">'+meta.join("")+'</div>'+
+      '<div class="acts">'+
+        '<button class="act yes">Aceitar na área</button>'+
+        '<button class="act no">Recusar</button>'+
+      '</div>';
+
+    var yes=el.querySelector(".act.yes"), no=el.querySelector(".act.no");
+    function decide(ok){
+      yes.disabled=no.disabled=true;
+      call("dagv.approvals.decide",{membership:r.name, approve:ok})
+        .then(function(){ toast(ok?"Entrou na área":"Solicitação recusada"); load(); })
+        .catch(function(e){ toast(e); yes.disabled=no.disabled=false; });
+    }
+    yes.onclick=function(){decide(true)}; no.onclick=function(){decide(false)};
+    return el;
+  }
+
+  $("tab-reg").onclick=function(){ view="reg"; $("tab-reg").setAttribute("aria-selected","true"); $("tab-area").setAttribute("aria-selected","false"); render(); };
+  $("tab-area").onclick=function(){ view="area"; $("tab-area").setAttribute("aria-selected","true"); $("tab-reg").setAttribute("aria-selected","false"); render(); };
+
+  load();
+})();
+</script>
+{% endblock %}

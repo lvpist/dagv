@@ -14,5 +14,10 @@ doc_events = {
     "DAGV Registration Request": {
         "before_insert": "dagv.provisioning.validate_fgv_email",
         "on_update": "dagv.provisioning.provision_on_approval",
-    }
+    },
+    # Raven auto-adds system users but leaves them disabled, which silently
+    # breaks workspace/channel membership. Enable them on creation.
+    "Raven User": {
+        "after_insert": "dagv.provisioning.force_enable_raven_user",
+    },
 }
