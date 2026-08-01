@@ -240,8 +240,10 @@ def setup_native_workspace():
     shortcuts = [
         {"label": "Produtos", "type": "DocType", "link_to": "Item", "color": "Grey"},
         {"label": "Entradas e saídas", "type": "DocType", "link_to": "Stock Entry", "color": "Blue"},
+        # No doc_view on a Report shortcut — Frappe only accepts the DocType
+        # views there (List, Report Builder, Dashboard, ...), not "Report".
         {"label": "Saldo em estoque", "type": "Report", "link_to": "Stock Balance",
-         "doc_view": "Report", "color": "Green"},
+         "color": "Green"},
     ]
 
     doc = (
