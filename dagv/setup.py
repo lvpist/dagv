@@ -116,3 +116,73 @@ def seed_area_modules(overwrite=False):
 
     frappe.db.commit()
     return {"updated": touched}
+
+
+# ---------------------------------------------------------------------------
+# Desk navigation
+# ---------------------------------------------------------------------------
+# Custom pages are only reachable if the desk knows about them. ERPNext's native
+# mechanism is a Workspace record with URL shortcuts — that's how Raven shows up
+# in the sidebar, so DAGV uses exactly the same pattern instead of asking people
+# to type URLs.
+
+DAGV_WORKSPACE = "DAGV"
+
+DAGV_SHORTCUTS = [
+    ("Meu painel", "/painel", "Blue"),
+    ("Aprovações", "/aprovacoes", "Orange"),
+    ("Gestão", "/gestao", "Grey"),
+    ("Raven (chat)", "/raven", "Green"),
+]
+
+
+def setup_desk_navigation():
+    """Put DAGV in the desk sidebar with links to its pages."""
+    if not frappe.db.exists("Module Def", DAGV_WORKSPACE):
+        frappe.get_doc(
+            {
+                "doctype": "Module Def",
+                "module_name": DAGV_WORKSPACE,
+                "app_name": "dagv",
+                "custom": 0,
+            }
+        ).insert(ignore_permissions=True)
+
+    doc = (
+        frappe.get_doc("Workspace", DAGV_WORKSPACE)
+        if frappe.db.exists("Workspace", DAGV_WORKSPACE)
+        else frappe.new_doc("Workspace")
+    )
+    doc.name = DAGV_WORKSPACE
+    doc.title = DAGV_WORKSPACE
+    doc.label = DAGV_WORKSPACE
+    doc.module = DAGV_WORKSPACE
+    doc.public = 1
+    doc.is_hidden = 0
+    doc.icon = "users"
+    doc.sequence_id = 0.5  # sits right at the top, before ERPNext's own
+
+    doc.set("shortcuts", [])
+    for label, url, color in DAGV_SHORTCUTS:
+        doc.append("shortcuts", {"label": label, "type": "URL", "url": url, "color": color})
+
+    content = [
+        {
+            "id": "dagvhdr001",
+            "type": "header",
+            "data": {"text": '<span class="h4"><b>DAGV</b></span>', "col": 12},
+        }
+    ]
+    for i, (label, _url, _color) in enumerate(DAGV_SHORTCUTS):
+        content.append(
+            {"id": f"dagvsc{i:04d}", "type": "shortcut", "data": {"shortcut_name": label, "col": 3}}
+        )
+    doc.content = frappe.as_json(content)
+
+    doc.flags.ignore_permissions = True
+    doc.save() if not doc.is_new() else doc.insert()
+    frappe.db.commit()
+    return {
+        "workspace": doc.name,
+        "shortcuts": [s.label for s in doc.shortcuts],
+    }
