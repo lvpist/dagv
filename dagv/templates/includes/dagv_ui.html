@@ -56,8 +56,14 @@ body::before{content:"";position:fixed;inset:-20% -10% auto -10%;height:55vh;poi
 .sec{display:flex;flex-direction:column;gap:var(--s2)}
 .stack{display:flex;flex-direction:column;gap:var(--s5)}
 
-/* Header */
+/* Header. NOTE: .top is a flex row, so the title block MUST be wrapped in a
+   single child (<div class="who">) — three loose children get spread apart. */
 .top{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--s3);flex-wrap:wrap}
+.top .who{display:flex;flex-direction:column;gap:.15rem;min-width:0}
+/* every row of buttons gets the same gap in both directions */
+.tabs,.quick,.acts,.acts2{display:flex;flex-wrap:wrap;gap:var(--s1)}
+/* any list of stacked cards */
+.cards,#list{display:flex;flex-direction:column;gap:var(--s2)}
 .dagv-mark{display:flex;align-items:center;gap:.55rem;background:none}
 .dagv-mark .sq{width:.62rem;height:.62rem;border-radius:2px;background:var(--accent-ui);transform:rotate(45deg)}
 .dagv-mark .nm{font-size:.7rem;font-weight:600;letter-spacing:.19em;text-transform:uppercase;color:var(--ink-2)}
