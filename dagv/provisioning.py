@@ -21,6 +21,27 @@ RAVEN_ROLE = "Raven User"
 # Modules every member keeps regardless of area. Everything else in ERPNext is
 # hidden unless one of their areas asks for it — that's the decluttering.
 ALWAYS_VISIBLE = {"Raven"}
+
+# Blocking modules only declutters the sidebar — a workspace still has to be
+# *permitted* to show up. So each module an area unlocks also grants the standard
+# ERPNext role that makes its tools usable. Members get the plain "User" tier;
+# ranks above Membro are handled by the area's own role, which an admin can
+# extend in ERPNext without touching this map.
+MODULE_ROLES = {
+    "Stock": ["Stock User", "Item Manager"],
+    "Selling": ["Sales User"],
+    "Buying": ["Purchase User"],
+    "Accounts": ["Accounts User"],
+    "Projects": ["Projects User"],
+    "Support": ["Support Team"],
+    "CRM": ["Sales User"],
+    "Assets": ["Stock User"],
+    "Manufacturing": ["Stock User"],
+    "Quality Management": ["Projects User"],
+    "Maintenance": ["Maintenance User"],
+    "Subcontracting": ["Stock User"],
+    "Website": [],
+}
 FGV_DOMAIN = "@fgv.edu.br"
 
 APPROVED = "Approved"
@@ -204,6 +225,34 @@ def _remove_from_workspace(workspace, email):
         )
 
 
+def _area_modules(area):
+    return frappe.get_all("DAGV Area Module", filters={"parent": area}, pluck="module")
+
+
+def _sync_module_roles(email):
+    """Grant the ERPNext roles the member's modules need, drop the ones they lost."""
+    mine = set()
+    for area in frappe.get_all(
+        "DAGV Membership", filters={"member": email, "status": APPROVED}, pluck="area"
+    ):
+        for module in _area_modules(area):
+            mine.update(MODULE_ROLES.get(module, []))
+
+    managed = {r for roles in MODULE_ROLES.values() for r in roles}
+    current = set(frappe.get_roles(email))
+
+    add = [r for r in mine - current if frappe.db.exists("Role", r)]
+    drop = [r for r in (managed & current) - mine]
+
+    if add or drop:
+        user = frappe.get_doc("User", email)
+        if add:
+            user.add_roles(*add)
+        if drop:
+            user.remove_roles(*drop)
+        frappe.clear_cache(user=email)
+
+
 def sync_module_access(email):
     """Hide every part of ERPNext the member's areas don't ask for.
 
@@ -222,10 +271,9 @@ def sync_module_access(email):
     for area in frappe.get_all(
         "DAGV Membership", filters={"member": email, "status": APPROVED}, pluck="area"
     ):
-        for row in frappe.get_all(
-            "DAGV Area Module", filters={"parent": area}, pluck="module"
-        ):
-            allowed.add(row)
+        allowed.update(_area_modules(area))
+
+    _sync_module_roles(email)
 
     every = set(frappe.get_all("Module Def", pluck="name"))
     blocked = sorted(every - allowed)
