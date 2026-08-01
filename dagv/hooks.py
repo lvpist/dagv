@@ -21,3 +21,7 @@ doc_events = {
         "after_insert": "dagv.provisioning.force_enable_raven_user",
     },
 }
+
+# Standard workspaces are rewritten on migrate, so our Home pins and the DAGV
+# workspace are re-applied afterwards instead of silently disappearing.
+after_migrate = "dagv.setup.after_migrate"

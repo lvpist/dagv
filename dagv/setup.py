@@ -186,3 +186,55 @@ def setup_desk_navigation():
         "workspace": doc.name,
         "shortcuts": [s.label for s in doc.shortcuts],
     }
+
+
+HOME_PINS = [
+    ("DAGV", "/desk/dagv", "Blue"),
+    ("Raven", "/raven", "Green"),
+]
+
+
+def pin_to_home():
+    """Put DAGV and Raven on ERPNext's Home page.
+
+    Home is a standard workspace, so ERPNext rewrites it on every migrate and
+    any manual edit disappears. Re-applied from the ``after_migrate`` hook so the
+    icons survive deploys instead of quietly vanishing.
+    """
+    if not frappe.db.exists("Workspace", "Home"):
+        return {"skipped": "no Home workspace"}
+
+    doc = frappe.get_doc("Workspace", "Home")
+
+    existing = {s.label for s in doc.shortcuts}
+    for label, url, color in HOME_PINS:
+        if label not in existing:
+            doc.append("shortcuts", {"label": label, "type": "URL", "url": url, "color": color})
+
+    content = frappe.parse_json(doc.content or "[]")
+    have = {b.get("data", {}).get("shortcut_name") for b in content if b.get("type") == "shortcut"}
+    blocks = []
+    for i, (label, _u, _c) in enumerate(HOME_PINS):
+        if label not in have:
+            blocks.append(
+                {"id": f"dagvpin{i:03d}", "type": "shortcut", "data": {"shortcut_name": label, "col": 3}}
+            )
+    if blocks:
+        header = {
+            "id": "dagvpinhdr",
+            "type": "header",
+            "data": {"text": '<span class="h4"><b>DAGV</b></span>', "col": 12},
+        }
+        content = [header] + blocks + content
+        doc.content = frappe.as_json(content)
+
+    doc.flags.ignore_permissions = True
+    doc.save()
+    frappe.db.commit()
+    return {"pinned": [p[0] for p in HOME_PINS]}
+
+
+def after_migrate():
+    """Re-apply everything ERPNext's own migrations would wipe."""
+    setup_desk_navigation()
+    pin_to_home()
