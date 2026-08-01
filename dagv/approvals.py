@@ -231,12 +231,26 @@ def my_dashboard():
         a["rank"] = held["rank"] if held else None
         areas.append(a)
 
+    # Purpose-built pages the member's areas unlock, so the panel can link to
+    # them without anyone hunting through the ERP.
+    tools = []
+    for name, held in mine.items():
+        if held["status"] != APPROVED:
+            continue
+        for module in frappe.get_all(
+            "DAGV Area Module", filters={"parent": name}, pluck="module"
+        ):
+            tool = MODULE_TOOLS.get(module)
+            if tool and tool not in tools:
+                tools.append(tool)
+
     course = frappe.db.get_value("DAGV Registration Request", user, "course")
     return {
         "user": user,
         "full_name": frappe.db.get_value("User", user, "full_name") or user,
         "course": course,
         "areas": areas,
+        "tools": tools,
         "can_approve": bool(led_areas()),
     }
 
