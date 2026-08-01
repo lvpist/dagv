@@ -1,0 +1,134 @@
+{# Shared UI for every DAGV page — one source of truth so pages can't drift.
+   Included from each page's {% block style %}. #}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light;
+  --bg:#FAFAF8; --glass:rgba(255,255,255,.66); --glass-line:rgba(25,34,32,.09);
+  --ink:#191F1D; --ink-2:#666E6A; --ink-3:#8E948F;
+  --line:rgba(25,34,32,.13); --field:rgba(255,255,255,.75);
+  --accent:#8F7A14; --accent-ui:#B69B1A; --accent-ink:#141812; --accent-soft:rgba(182,155,26,.13);
+  --danger:#A5402C; --danger-soft:rgba(165,64,44,.12);
+  --radius:14px; --radius-sm:10px;
+  /* one spacing scale — sections and stacks use it, never ad-hoc margins */
+  --s1:.4rem; --s2:.7rem; --s3:1rem; --s4:1.5rem; --s5:2.25rem;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    color-scheme:dark;
+    --bg:#0A0C0B; --glass:rgba(255,255,255,.045); --glass-line:rgba(255,255,255,.09);
+    --ink:#ECEFEA; --ink-2:#969C96; --ink-3:#6E746E;
+    --line:rgba(255,255,255,.12); --field:rgba(255,255,255,.04);
+    --accent:#D9BE3D; --accent-ui:#D9BE3D; --accent-ink:#12150E; --accent-soft:rgba(217,190,61,.14);
+    --danger:#DE8067; --danger-soft:rgba(222,128,103,.14);
+  }
+}
+:root[data-theme="light"]{color-scheme:light;--bg:#FAFAF8;--glass:rgba(255,255,255,.66);
+  --glass-line:rgba(25,34,32,.09);--ink:#191F1D;--ink-2:#666E6A;--ink-3:#8E948F;
+  --line:rgba(25,34,32,.13);--field:rgba(255,255,255,.75);--accent:#8F7A14;--accent-ui:#B69B1A;
+  --accent-ink:#141812;--accent-soft:rgba(182,155,26,.13);--danger:#A5402C;--danger-soft:rgba(165,64,44,.12)}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0A0C0B;--glass:rgba(255,255,255,.045);
+  --glass-line:rgba(255,255,255,.09);--ink:#ECEFEA;--ink-2:#969C96;--ink-3:#6E746E;
+  --line:rgba(255,255,255,.12);--field:rgba(255,255,255,.04);--accent:#D9BE3D;--accent-ui:#D9BE3D;
+  --accent-ink:#12150E;--accent-soft:rgba(217,190,61,.14);--danger:#DE8067;--danger-soft:rgba(222,128,103,.14)}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg)}
+body{font-family:"Geist","Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);
+  line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100dvh;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:-20% -10% auto -10%;height:55vh;pointer-events:none;z-index:0;
+  background:radial-gradient(46% 60% at 78% 12%,var(--accent-soft),transparent 70%);filter:blur(46px)}
+
+/* Frappe ships Bootstrap on web pages: pin our colours, never rely on bare tags. */
+.wrap a,.wrap a:link,.wrap a:visited,.wrap a:hover,.wrap a:focus{color:var(--accent);text-decoration:none}
+.wrap h1,.wrap h2,.wrap h3{color:var(--ink)}
+.wrap select option{background-color:var(--bg);color:var(--ink)}
+
+/* Layout. Vertical centring uses margin-block:auto — `justify-content:center`
+   clips content taller than the viewport and makes the top unreachable. */
+.wrap{position:relative;z-index:1;min-height:100dvh;display:flex;flex-direction:column;align-items:center;
+  padding:clamp(1.25rem,4vw,2.5rem) 1.15rem}
+.shell{width:100%;margin-block:auto;display:flex;flex-direction:column;gap:var(--s4)}
+.sec{display:flex;flex-direction:column;gap:var(--s2)}
+.stack{display:flex;flex-direction:column;gap:var(--s3)}
+
+/* Header */
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--s3);flex-wrap:wrap}
+.dagv-mark{display:flex;align-items:center;gap:.55rem;background:none}
+.dagv-mark .sq{width:.62rem;height:.62rem;border-radius:2px;background:var(--accent-ui);transform:rotate(45deg)}
+.dagv-mark .nm{font-size:.7rem;font-weight:600;letter-spacing:.19em;text-transform:uppercase;color:var(--ink-2)}
+.wrap h1{font-size:1.58rem;font-weight:600;letter-spacing:-.022em;margin:.15rem 0 0;line-height:1.15;
+  text-wrap:balance;color:var(--ink)}
+.sub{margin:.2rem 0 0;color:var(--ink-2);font-size:.9rem}
+.wrap h2{font-size:.75rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);margin:0}
+
+/* Buttons. RULE: any :hover that changes background restates its colour, and
+   every filled variant restates colour in its own :hover — otherwise a base
+   .x:hover{color:…} wins the tie and the label goes unreadable. */
+.qbtn,.tab,.b,.tbtn{font-family:inherit;cursor:pointer;transition:background .14s,color .14s,border-color .14s,filter .14s;
+  -webkit-tap-highlight-color:transparent;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.qbtn{font-size:.82rem;font-weight:600;color:var(--ink-2);background:var(--field);border:1px solid var(--line);
+  border-radius:999px;padding:.5rem .85rem;gap:.35rem}
+.qbtn:hover{color:var(--ink);background:var(--field);border-color:var(--ink-3)}
+.qbtn.hot,.qbtn.hot:hover{background:var(--accent-ui);border-color:var(--accent-ui);color:var(--accent-ink)}
+.qbtn.hot:hover{filter:brightness(1.07)}
+
+.tab{font-size:.87rem;font-weight:550;color:var(--ink-2);background:var(--field);border:1px solid var(--line);
+  border-radius:999px;padding:.5rem .9rem;min-height:2.5rem}
+.tab:hover{color:var(--ink);border-color:var(--ink-3)}
+.tab[aria-selected="true"],.tab[aria-selected="true"]:hover{background:var(--accent-ui);
+  border-color:var(--accent-ui);color:var(--accent-ink);font-weight:650}
+
+.b{font-size:.79rem;font-weight:600;border-radius:9px;padding:.45rem .7rem;min-height:2.1rem;
+  border:1px solid var(--line);background:var(--field);color:var(--ink-2)}
+.b:hover{color:var(--ink);border-color:var(--ink-3)}
+.b.pri,.b.pri:hover{background:var(--accent-ui);border-color:var(--accent-ui);color:var(--accent-ink)}
+.b.pri:hover{filter:brightness(1.07)}
+.b.dgr,.b.dgr:hover{color:var(--danger);border-color:var(--danger-soft)}
+.b.dgr:hover{background:var(--danger-soft)}
+.b[disabled]{opacity:.5;cursor:not-allowed}
+
+/* Surfaces */
+.panel{background:var(--glass);border:1px solid var(--glass-line);border-radius:16px;
+  backdrop-filter:blur(20px) saturate(1.3);-webkit-backdrop-filter:blur(20px) saturate(1.3);overflow:hidden}
+.rowline{display:flex;align-items:center;gap:var(--s2);padding:.85rem 1rem;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.rowline:last-child{border-bottom:none}
+.rowline .main{flex:1 1 12rem;min-width:0;display:flex;flex-direction:column;gap:.18rem}
+.nm2{font-size:.96rem;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}
+.dim{font-size:.78rem;color:var(--ink-3);min-width:0;overflow-wrap:anywhere}
+.acts{display:flex;gap:.4rem;flex-wrap:wrap}
+.tag{font-size:.68rem;font-weight:650;text-transform:uppercase;letter-spacing:.03em;padding:.2rem .45rem;
+  border-radius:6px;background:var(--accent-soft);color:var(--accent)}
+.tag.mut{background:var(--field);color:var(--ink-3);border:1px solid var(--line)}
+.tag.off{background:var(--danger-soft);color:var(--danger)}
+
+/* Fields */
+input,select,textarea{font-family:inherit;font-size:.95rem;color:var(--ink);background:var(--field);
+  border:1px solid var(--line);border-radius:var(--radius-sm);padding:.6rem .75rem;width:100%;
+  -webkit-appearance:none;appearance:none}
+input::placeholder,textarea::placeholder{color:var(--ink-3)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent-ui);box-shadow:0 0 0 3px var(--accent-soft)}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238E948F' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right .8rem center;padding-right:2.3rem;cursor:pointer}
+.lb{font-size:.72rem;font-weight:600;letter-spacing:.055em;text-transform:uppercase;color:var(--ink-2);display:block}
+.hint{font-size:.76rem;color:var(--ink-3)}
+
+/* Feedback */
+.toast{position:fixed;left:50%;bottom:1.25rem;transform:translateX(-50%);z-index:60;background:var(--ink);
+  color:var(--bg);font-size:.87rem;font-weight:550;padding:.65rem 1rem;border-radius:999px;opacity:0;
+  pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center}
+.toast.on{opacity:1}
+.loading,.empty{color:var(--ink-3);font-size:.9rem;padding:var(--s5) var(--s3);text-align:center}
+
+/* Footer — same rhythm on every page */
+.dagv-foot{width:100%;margin-top:var(--s5);padding-top:var(--s3);border-top:1px solid var(--line);
+  display:flex;justify-content:space-between;align-items:center;gap:var(--s2);flex-wrap:wrap}
+.dagv-foot p{margin:0;font-size:.76rem;color:var(--ink-3)}
+.dagv-foot nav{display:flex;gap:var(--s2);flex-wrap:wrap}
+.dagv-foot nav a{font-size:.76rem;font-weight:550;color:var(--ink-2)!important}
+.dagv-foot nav a:hover{color:var(--ink)!important}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>

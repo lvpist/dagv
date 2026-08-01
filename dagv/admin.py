@@ -34,14 +34,12 @@ def list_areas():
                 "is_active", "sort_order", "raven_workspace", "erp_role"],
         order_by="sort_order asc, name asc",
     )
+    # Counted in Python: Frappe rejects SQL functions written as select strings.
     counts = {}
-    for row in frappe.get_all(
-        "DAGV Membership",
-        filters={"status": APPROVED},
-        fields=["area", "count(name) as n"],
-        group_by="area",
+    for area in frappe.get_all(
+        "DAGV Membership", filters={"status": APPROVED}, pluck="area"
     ):
-        counts[row["area"]] = row["n"]
+        counts[area] = counts.get(area, 0) + 1
 
     for a in areas:
         a["members"] = counts.get(a["name"], 0)
@@ -90,7 +88,7 @@ def rename_area(area, new_name):
     if frappe.db.exists("DAGV Area", new_name):
         frappe.throw(f"Já existe uma área chamada {new_name}.")
 
-    frappe.rename_doc("DAGV Area", area, new_name, force=True, ignore_permissions=True)
+    frappe.rename_doc("DAGV Area", area, new_name, force=True)
     frappe.db.set_value("DAGV Area", new_name, "area_name", new_name)
     frappe.db.commit()
     return {"ok": True, "name": new_name}
