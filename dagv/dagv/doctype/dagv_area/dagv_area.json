@@ -1,0 +1,112 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:area_name",
+ "creation": "2026-08-01 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "area_name",
+  "short_code",
+  "category",
+  "is_active",
+  "sort_order",
+  "description",
+  "access_section",
+  "required_course",
+  "raven_workspace",
+  "erp_role"
+ ],
+ "fields": [
+  {
+   "fieldname": "area_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Área",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "description": "Sigla curta usada na interface (ex.: VPAE).",
+   "fieldname": "short_code",
+   "fieldtype": "Data",
+   "label": "Sigla"
+  },
+  {
+   "default": "Suplementar",
+   "fieldname": "category",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Categoria",
+   "options": "Mínima\nSuplementar\nExecutiva"
+  },
+  {
+   "default": "1",
+   "description": "Desmarque para arquivar a área sem apagar o histórico.",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Ativa"
+  },
+  {
+   "fieldname": "sort_order",
+   "fieldtype": "Int",
+   "label": "Ordem"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Descrição"
+  },
+  {
+   "fieldname": "access_section",
+   "fieldtype": "Section Break",
+   "label": "O que esta área libera"
+  },
+  {
+   "description": "Se preenchido, apenas alunos deste curso podem entrar (usado pelas VPs acadêmicas).",
+   "fieldname": "required_course",
+   "fieldtype": "Select",
+   "label": "Curso obrigatório",
+   "options": "\nAdministração de Empresas\nAdministração Pública\nEconomia"
+  },
+  {
+   "description": "Workspace privado do Raven. Criado automaticamente se ficar em branco.",
+   "fieldname": "raven_workspace",
+   "fieldtype": "Data",
+   "label": "Raven Workspace"
+  },
+  {
+   "description": "Papel do ERPNext concedido aos membros. Criado automaticamente se ficar em branco.",
+   "fieldname": "erp_role",
+   "fieldtype": "Link",
+   "label": "Papel no ERPNext",
+   "options": "Role"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-08-01 00:00:00",
+ "modified_by": "Administrator",
+ "module": "DAGV",
+ "name": "DAGV Area",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "sort_order",
+ "sort_order": "ASC",
+ "states": [],
+ "track_changes": 1
+}
