@@ -238,6 +238,7 @@ def after_migrate():
     """Re-apply everything ERPNext's own migrations would wipe."""
     setup_desk_navigation()
     setup_sidebar()
+    setup_desktop_icon()
     pin_to_home()
 
 
@@ -279,3 +280,30 @@ def setup_sidebar():
     doc.save() if not doc.is_new() else doc.insert()
     frappe.db.commit()
     return {"sidebar": doc.name, "items": [i.label for i in doc.items]}
+
+
+def setup_desktop_icon():
+    """Put DAGV in the desk's top navigation strip.
+
+    That strip is built from `Desktop Icon` records (see frappe desktop.js,
+    which looks each one up by label) — NOT from Workspace or Workspace Sidebar
+    records. Raven ships one, which is the only reason it appeared there while
+    DAGV stayed invisible no matter how many workspaces existed.
+    """
+    name = "DAGV"
+    if frappe.db.exists("Desktop Icon", name):
+        doc = frappe.get_doc("Desktop Icon", name)
+    else:
+        doc = frappe.new_doc("Desktop Icon")
+        doc.label = name
+
+    doc.icon_type = "App"
+    doc.link_type = "External"   # same shape Raven uses
+    doc.link = "/desk/dagv"
+    doc.app = "dagv"
+    doc.standard = 0
+    doc.hidden = 0
+    doc.flags.ignore_permissions = True
+    doc.save(ignore_permissions=True) if not doc.is_new() else doc.insert(ignore_permissions=True)
+    frappe.db.commit()
+    return {"desktop_icon": doc.name}
