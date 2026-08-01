@@ -47,7 +47,7 @@
         <h1 id="hi">Painel</h1>
         <p class="sub" id="subtitle">Carregando…</p>
       </div>
-      <div class="acts" id="quick"></div>
+      <div class="quick" id="quick"></div>
     </header>
 
     <div id="body"><div class="loading">Carregando suas áreas…</div></div>
@@ -93,7 +93,11 @@
       : "Escolha as áreas em que quer atuar.";
 
     // Only leaders and user managers ever see the approvals queue.
-    $("quick").innerHTML = d.can_approve ? '<a class="qbtn hot" href="/aprovacoes">Aprovações</a>' : "";
+    var quick = (d.tools||[]).map(function(t){
+      return '<a class="qbtn" href="'+esc(t.url)+'">'+esc(t.label)+'</a>';
+    }).join("");
+    if(d.can_approve) quick += '<a class="qbtn hot" href="/aprovacoes">Aprovações</a>';
+    $("quick").innerHTML = quick;
 
     var h="";
     if(wait.length) h+=sec("Pendentes", grid(wait));

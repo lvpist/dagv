@@ -1,0 +1,214 @@
+{% extends "templates/base.html" %}
+
+{% block title %}Produtos · DAGV{% endblock %}
+
+{% block head_include %}
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+{% endblock %}
+
+{% block style %}
+{% include "dagv/templates/includes/dagv_ui.html" %}
+<style>
+.shell{max-width:40rem}
+.p{background:var(--glass);border:1px solid var(--glass-line);border-radius:14px;padding:.8rem .9rem;
+  backdrop-filter:blur(20px) saturate(1.3);-webkit-backdrop-filter:blur(20px) saturate(1.3);
+  display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap}
+.p .info{flex:1 1 9rem;min-width:0;display:flex;flex-direction:column;gap:.1rem}
+.p .nm2{font-size:.94rem;font-weight:600;letter-spacing:-.012em}
+.p .price{font-size:.78rem;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.qty{font-size:1.15rem;font-weight:650;font-variant-numeric:tabular-nums;min-width:2.7rem;text-align:right;
+  letter-spacing:-.02em}
+.qty.low{color:var(--danger)}
+.qty .u{font-size:.7rem;font-weight:550;color:var(--ink-3);margin-left:.12rem}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(7rem,1fr));gap:var(--s2)}
+.stat{background:var(--glass);border:1px solid var(--glass-line);border-radius:12px;padding:.7rem .85rem;
+  display:flex;flex-direction:column;gap:.1rem}
+.stat .v{font-size:1.28rem;font-weight:650;letter-spacing:-.025em;font-variant-numeric:tabular-nums}
+.stat .k{font-size:.69rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
+.log{display:flex;flex-direction:column}
+.log .l{display:flex;align-items:baseline;gap:.5rem;font-size:.8rem;color:var(--ink-2);flex-wrap:wrap;
+  padding:.42rem 0;border-bottom:1px solid var(--line)}
+.log .l:last-child{border-bottom:none}
+.log .l b{color:var(--ink);font-weight:600}
+.log .l .dir{font-weight:700;font-variant-numeric:tabular-nums;min-width:2rem}
+.log .l .out{color:var(--danger)}
+.log .l .inn{color:var(--ok)}
+.log .l .when{margin-left:auto;color:var(--ink-3);font-size:.74rem}
+dialog{border:none;background:none;padding:0;max-width:min(22rem,92vw);width:100%}
+dialog::backdrop{background:rgba(10,12,11,.55);backdrop-filter:blur(5px)}
+.modal{background:var(--bg);border:1px solid var(--glass-line);border-radius:16px;padding:1.15rem;
+  display:flex;flex-direction:column;gap:var(--s2)}
+.modal h3{margin:0;font-size:1.02rem;font-weight:600;color:var(--ink)}
+</style>
+{% endblock %}
+
+{% block banner %}{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block base_scripts %}{% endblock %}
+
+{% block content %}
+<div class="wrap">
+  <div class="shell">
+    <header class="top">
+      <div class="who">
+        <div class="dagv-mark"><span class="sq"></span><span class="nm">DAGV</span></div>
+        <h1>Produtos</h1>
+      </div>
+      <div class="quick">
+        <a class="qbtn" href="/painel">Meu painel</a>
+        <button class="qbtn hot" id="novo">+ Produto</button>
+      </div>
+    </header>
+
+    <div id="body"><div class="loading">Carregando…</div></div>
+
+    <footer class="dagv-foot">
+      <p>Diretório Acadêmico Getulio Vargas</p>
+      <nav><a href="/painel">Painel</a><a href="/raven">Raven</a></nav>
+    </footer>
+  </div>
+</div>
+
+<dialog id="dlg"><div class="modal" id="dlgbody"></div></dialog>
+<div class="toast" id="toast"></div>
+{% endblock %}
+
+{% block script %}
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  var data={products:[],currency:"BRL"}, log=[];
+
+  function call(m,b){
+    return fetch("/api/method/"+m,{method:b?"POST":"GET",
+      headers:{"Content-Type":"application/json","X-Frappe-CSRF-Token":(window.frappe&&frappe.csrf_token)||""},
+      body:b?JSON.stringify(b):undefined})
+      .then(function(r){return r.json().then(function(j){ if(!r.ok) throw msgOf(j); return j.message; })});
+  }
+  function msgOf(j){ try{ return JSON.parse(JSON.parse(j._server_messages)[0]).message.replace(/<[^>]+>/g,""); }
+                     catch(e){ return "Algo deu errado."; } }
+  function toast(t){ var e=$("toast"); e.textContent=t; e.classList.add("on"); setTimeout(function(){e.classList.remove("on")},2400); }
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]}); }
+  function money(v){ try{ return (v||0).toLocaleString("pt-BR",{style:"currency",currency:data.currency||"BRL"}); }
+                     catch(e){ return "R$ "+(v||0).toFixed(2); } }
+
+  function load(){
+    Promise.all([
+      call("dagv.produtos.list_products"),
+      call("dagv.produtos.recent_movements").catch(function(){return []})
+    ]).then(function(r){ data=r[0]||{products:[]}; log=r[1]||[]; render(); })
+      .catch(function(e){ $("body").innerHTML='<div class="empty">'+esc(e)+'</div>'; });
+  }
+
+  function render(){
+    var ps=data.products||[];
+    var total=ps.reduce(function(a,p){return a+(p.qty||0)},0);
+    var value=ps.reduce(function(a,p){return a+(p.qty||0)*(p.standard_rate||0)},0);
+    var low=ps.filter(function(p){return (p.qty||0)<=5}).length;
+
+    var h='<div class="stack">';
+    h+='<section class="sec"><div class="sum">'+
+       '<div class="stat"><span class="v">'+total+'</span><span class="k">itens em estoque</span></div>'+
+       '<div class="stat"><span class="v">'+money(value)+'</span><span class="k">valor a vender</span></div>'+
+       '<div class="stat"><span class="v">'+low+'</span><span class="k">acabando</span></div>'+
+       '</div></section>';
+
+    h+='<section class="sec"><h2>Estoque</h2>';
+    if(!ps.length){
+      h+='<div class="empty">Nenhum produto ainda. Toque em <b>+ Produto</b> para comecar.</div>';
+    }else{
+      h+='<div class="cards">';
+      ps.forEach(function(p){
+        h+='<div class="p">'+
+          '<div class="info"><span class="nm2">'+esc(p.item_name)+'</span>'+
+            '<span class="price">'+money(p.standard_rate)+'</span></div>'+
+          '<span class="qty'+((p.qty||0)<=5?' low':'')+'">'+(p.qty||0)+'<span class="u">un</span></span>'+
+          '<div class="acts">'+
+            '<button class="tbtn" data-restock="'+esc(p.name)+'" data-nm="'+esc(p.item_name)+'">Repor</button>'+
+            '<button class="tbtn pri" data-sell="'+esc(p.name)+'" data-nm="'+esc(p.item_name)+'" data-max="'+(p.qty||0)+'">Vender</button>'+
+          '</div></div>';
+      });
+      h+='</div>';
+    }
+    h+='</section>';
+
+    if(log.length){
+      h+='<section class="sec"><h2>Ultimas movimentacoes</h2><div class="log">';
+      log.forEach(function(m){
+        var out = m.stock_entry_type==="Material Issue";
+        h+='<div class="l"><span class="dir '+(out?"out":"inn")+'">'+(out?"−":"+")+(m.qty||0)+'</span>'+
+           '<b>'+esc(m.item_code)+'</b><span>'+esc(m.who||"")+'</span>'+
+           '<span class="when">'+esc(m.posting_date||"")+'</span></div>';
+      });
+      h+='</div></section>';
+    }
+    h+='</div>';
+    $("body").innerHTML=h;
+    wire();
+  }
+
+  function wire(){
+    document.querySelectorAll("[data-sell]").forEach(function(b){
+      b.onclick=function(){
+        ask("Vender "+b.dataset.nm, "Quantas unidades sairam?", Number(b.dataset.max), function(q){
+          return call("dagv.produtos.record_sale",{item:b.dataset.sell, qty:q})
+            .then(function(){ toast("Venda registrada"); });
+        });
+      };
+    });
+    document.querySelectorAll("[data-restock]").forEach(function(b){
+      b.onclick=function(){
+        ask("Repor "+b.dataset.nm, "Quantas unidades entraram?", null, function(q){
+          return call("dagv.produtos.record_restock",{item:b.dataset.restock, qty:q})
+            .then(function(){ toast("Estoque atualizado"); });
+        });
+      };
+    });
+  }
+
+  function ask(title, label, max, run){
+    $("dlgbody").innerHTML='<h3>'+esc(title)+'</h3>'+
+      '<div class="f"><label class="lb">'+esc(label)+'</label>'+
+      '<input id="q" type="number" min="1" step="1" value="1"'+(max?' max="'+max+'"':'')+'></div>'+
+      (max?'<span class="hint">Disponivel: '+max+' un</span>':'')+
+      '<div class="acts"><button class="b pri" id="ok">Confirmar</button>'+
+      '<button class="b" id="no">Cancelar</button></div>';
+    var d=$("dlg"); d.showModal(); $("q").focus(); $("q").select();
+    $("no").onclick=function(){ d.close(); };
+    $("ok").onclick=function(){
+      var q=Number($("q").value);
+      if(!q || q<1) return;
+      $("ok").disabled=true;
+      run(q).then(function(){ d.close(); load(); })
+            .catch(function(e){ toast(e); $("ok").disabled=false; });
+    };
+  }
+
+  $("novo").onclick=function(){
+    $("dlgbody").innerHTML='<h3>Novo produto</h3>'+
+      '<div class="f"><label class="lb">Nome</label><input id="n" placeholder="Ex.: Camiseta DAGV"></div>'+
+      '<div class="f"><label class="lb">Preco de venda</label>'+
+      '<input id="pv" type="number" min="0" step="0.01" value="0"></div>'+
+      '<div class="f"><label class="lb">Custo por unidade</label>'+
+      '<input id="pc" type="number" min="0" step="0.01" value="0"></div>'+
+      '<span class="hint">O custo e opcional, serve so para calcular o valor do estoque.</span>'+
+      '<div class="acts"><button class="b pri" id="ok">Criar</button>'+
+      '<button class="b" id="no">Cancelar</button></div>';
+    var d=$("dlg"); d.showModal(); $("n").focus();
+    $("no").onclick=function(){ d.close(); };
+    $("ok").onclick=function(){
+      var nm=$("n").value.trim();
+      if(!nm) return;
+      $("ok").disabled=true;
+      call("dagv.produtos.create_product",{item_name:nm, price:$("pv").value, cost:$("pc").value})
+        .then(function(){ toast("Produto criado"); d.close(); load(); })
+        .catch(function(e){ toast(e); $("ok").disabled=false; });
+    };
+  };
+
+  $("dlg").addEventListener("click", function(e){ if(e.target===$("dlg")) $("dlg").close(); });
+  load();
+})();
+</script>
+{% endblock %}

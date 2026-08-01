@@ -23,6 +23,13 @@ REJECTED = "Rejected"
 REQUESTED = "Requested"
 LEAVE_REQUESTED = "Leave Requested"
 
+# Purpose-built pages that stand in for a whole ERPNext module. Raw ERPNext is
+# too much for most members, so where we've built a simple page for a module,
+# that's what they get pointed at.
+MODULE_TOOLS = {
+    "Stock": {"label": "Produtos", "url": "/produtos"},
+}
+
 
 # ---------------------------------------------------------------------------
 # Permission helpers
