@@ -41,6 +41,47 @@ import frappe
 KEEP_SIDEBARS = {"dagv", "raven", "my workspaces"}
 
 
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def module_link_query(doctype, txt, searchfield, start, page_len, filters):
+    """O seletor de "Módulos do ERP" só oferece o que é mesmo uma app.
+
+    Estava a listar todos os `Module Def` — Bulk Transaction, EDI, Regional,
+    Communication — que são encanamento do Frappe e não abrem nada. Um módulo
+    só serve a uma área se **tiver uma página pública e visível**, que é
+    exatamente o que vai parar dentro da pasta da área.
+
+    Derivado, não escrito à mão: sai da lista de workspaces. Instalar uma app
+    nova no ERPNext passa a oferecê-la aqui sozinha.
+    """
+    excluidos = {"DAGV"}
+    modulos = set()
+    for ws in frappe.get_all(
+        "Workspace",
+        filters={"public": 1, "is_hidden": 0},
+        fields=["name", "module"],
+    ):
+        if not ws.module or ws.module in excluidos or ws.module.startswith("Raven"):
+            continue
+        papeis = frappe.get_all(
+            "Has Role", filters={"parent": ws.name, "parenttype": "Workspace"}, pluck="role"
+        )
+        # Páginas de administração ficam de fora: uma área não "destrava"
+        # Definições do ERPNext nem a gestão de utilizadores.
+        if "System Manager" in papeis:
+            continue
+        modulos.add(ws.module)
+
+    # E o que já está atribuído a alguma área, mesmo que a página esteja
+    # escondida (o Projects está). Um seletor que não oferece o valor que o
+    # registo já guarda parece avariado — foi assim que isto apareceu.
+    modulos |= set(frappe.get_all("DAGV Area Module", pluck="module"))
+    modulos -= excluidos
+
+    resultado = sorted(m for m in modulos if m and (not txt or txt.lower() in m.lower()))
+    return [[m] for m in resultado[start : start + page_len]]
+
+
 def _area_role(area):
     return frappe.db.get_value("DAGV Area", area, "erp_role") or f"DAGV {area}"
 

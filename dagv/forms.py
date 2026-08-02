@@ -188,6 +188,33 @@ def people_have_names():
     return {"ok": True}
 
 
+def lean_area():
+    """Tirar do formulário de Área o que ninguém preenche.
+
+    "Curso obrigatório" só faz sentido nas três VPs académicas, e essas já estão
+    definidas desde o início. Aparecia nas quinze e não era para ser mexido em
+    nenhuma. Escondido, não apagado: o valor das três continua lá e continua a
+    ser respeitado na aprovação — muda apenas deixar de pedir uma decisão que
+    não existe. Volta em Personalizar Formulário desmarcando a caixa.
+    """
+    # `hidden` não serve aqui: o Frappe continua a desenhar campos escondidos
+    # para quem é System Manager, que é justamente quem edita áreas. `depends_on`
+    # é avaliado sempre — e "só aparece se já tiver curso" resolve sem escrever
+    # VPAE/VPAP/VPEcono no código: as três têm valor, as outras doze não.
+    make_property_setter("DAGV Area", "required_course", "hidden", 0, "Check",
+                         validate_fields_for_doctype=False)
+    # `Code`, não `Data`: o `property_type` tem de bater com o tipo real do campo
+    # em DocField, senão o Frappe grava o Property Setter e ignora-o em silêncio.
+    # Foi por isso que o campo continuou à vista mesmo com a meta a dizer o
+    # contrário.
+    make_property_setter("DAGV Area", "required_course", "depends_on",
+                         "eval:doc.required_course", "Code",
+                         validate_fields_for_doctype=False)
+    frappe.clear_cache(doctype="DAGV Area")
+    frappe.db.commit()
+    return {"ok": True}
+
+
 def list_defaults():
     """Cada lista já abre útil, sem ninguém precisar configurar nada.
 
@@ -263,6 +290,7 @@ def sync():
     lean_todo()
     lean_board()
     people_have_names()
+    lean_area()
     list_defaults()
     saved_filters()
     return {"ok": True}
