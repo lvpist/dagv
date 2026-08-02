@@ -100,6 +100,17 @@ def _header(idx, text):
             "data": {"text": f'<span class="h4"><b>{text}</b></span>', "col": 12}}
 
 
+def _para(idx, text):
+    """Uma linha de ajuda onde a dúvida é previsível.
+
+    Escrita para quem chega sem ninguém explicar: um membro novo cai numa
+    página de zeros e não tem como saber se está quebrado, se está vazio, ou se
+    ele é que ainda não fez nada. A frase responde isso antes de virar dúvida.
+    """
+    return {"id": f"p{idx}", "type": "paragraph",
+            "data": {"text": f'<span class="text-muted">{text}</span>', "col": 12}}
+
+
 def _card(idx, name, col=4):
     return {"id": f"nc{idx}", "type": "number_card",
             "data": {"number_card_name": name, "col": col}}
@@ -164,12 +175,17 @@ def build_meu_dagv():
 
     content = [
         _header("md1", "O que depende de mim"),
+        _para("md1", "Estes números são só seus. Clique em qualquer um para abrir "
+                     "exatamente essas tarefas."),
         _card("md1", "Comigo agora"),
         _card("md2", "Vence em 7 dias"),
         _card("md3", "Atrasadas"),
         _list("md1", "Atribuídas a mim"),
         _list("md2", "Nas minhas áreas"),
         _header("md2", "Minhas áreas"),
+        _para("md2", "Você enxerga o trabalho das áreas em que entrou — se estiver "
+                     "tudo zerado, é porque ainda não entrou em nenhuma. "
+                     "Peça entrada em <b>Minhas áreas e cargos</b>, ali embaixo."),
         _card("md4", "Abertas nas minhas áreas"),
         _card("md5", "Sem responsável"),
         _short("md1", "Abrir o quadro", col=4),
@@ -220,6 +236,9 @@ def build_aprovacoes():
 
     content = [
         _header("ap1", "Precisa de decisão"),
+        _para("ap1", "Só aparecem pedidos das áreas que você lidera. Para decidir, "
+                     "marque as linhas na lista e use <b>Ações → Aprovar</b> — "
+                     "não precisa abrir um por um."),
         _card("ap1", "Cadastros pendentes"),
         _card("ap2", "Pedidos de entrada"),
         _card("ap3", "Pedidos de saída"),

@@ -188,9 +188,81 @@ def people_have_names():
     return {"ok": True}
 
 
+def list_defaults():
+    """Cada lista já abre útil, sem ninguém precisar configurar nada.
+
+    Uma lista que abre pela ordem de criação obriga a pessoa a ordenar toda vez
+    para descobrir o que vence primeiro — e quem não sabe que dá para ordenar
+    simplesmente não vê o prazo. Trabalho com prazo se lê por vencimento.
+    """
+    # Tarefa: o que vence antes aparece antes.
+    make_property_setter("Task", None, "sort_field", "exp_end_date", "Data",
+                         for_doctype=True, validate_fields_for_doctype=False)
+    make_property_setter("Task", None, "sort_order", "ASC", "Data",
+                         for_doctype=True, validate_fields_for_doctype=False)
+
+    # Área: a lista mostrava o ID; agora mostra o nome, e dá para filtrar pelo
+    # que de facto distingue uma área das outras.
+    make_property_setter("DAGV Area", None, "title_field", "area_name", "Data",
+                         for_doctype=True, validate_fields_for_doctype=False)
+    make_property_setter("DAGV Area", None, "show_title_field_in_link", 1, "Check",
+                         for_doctype=True, validate_fields_for_doctype=False)
+    for fieldname in ("category", "is_active"):
+        make_property_setter("DAGV Area", fieldname, "in_standard_filter", 1, "Check",
+                             validate_fields_for_doctype=False)
+
+    # Filiação: quem decide quer ver primeiro quem está esperando.
+    make_property_setter("DAGV Membership", None, "sort_field", "modified", "Data",
+                         for_doctype=True, validate_fields_for_doctype=False)
+
+    frappe.clear_cache()
+    frappe.db.commit()
+    return {"ok": True}
+
+
+# Filtros que valem para todo mundo. Nenhum depende de quem está olhando — um
+# filtro salvo é um registro compartilhado, então "minhas tarefas" não cabe aqui
+# (isso é o cartão "Comigo agora", que sabe quem abriu a página).
+SAVED_FILTERS = [
+    ("Task", "Atrasadas", [["Task", "exp_end_date", "<", "Today"],
+                           ["Task", "status", "in", ["Open", "Working", "Pending Review", "Overdue"]]]),
+    ("Task", "Sem responsável", [["Task", "_assign", "is", "not set"],
+                                 ["Task", "status", "in", ["Open", "Working", "Pending Review", "Overdue"]]]),
+    ("Task", "Concluídas", [["Task", "status", "=", "Completed"]]),
+    ("DAGV Membership", "Esperando decisão",
+     [["DAGV Membership", "status", "in", ["Requested", "Leave Requested"]]]),
+    ("DAGV Registration Request", "A aprovar",
+     [["DAGV Registration Request", "status", "=", "Pending"]]),
+]
+
+
+def saved_filters():
+    made = []
+    for doctype, label, filters in SAVED_FILTERS:
+        existing = frappe.db.exists(
+            "List Filter", {"reference_doctype": doctype, "filter_name": label}
+        )
+        doc = (
+            frappe.get_doc("List Filter", existing)
+            if existing
+            else frappe.new_doc("List Filter")
+        )
+        doc.reference_doctype = doctype
+        doc.filter_name = label
+        doc.for_user = ""      # vazio = de todo mundo, não meu
+        doc.filters = frappe.as_json(filters)
+        doc.flags.ignore_permissions = True
+        doc.save() if not doc.is_new() else doc.insert()
+        made.append(f"{doctype}: {label}")
+    frappe.db.commit()
+    return {"filters": made}
+
+
 def sync():
     lean_task()
     lean_todo()
     lean_board()
     people_have_names()
+    list_defaults()
+    saved_filters()
     return {"ok": True}
