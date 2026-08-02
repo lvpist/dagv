@@ -166,12 +166,22 @@ def setup_desk_navigation():
     for label, url, color in DAGV_SHORTCUTS:
         doc.append("shortcuts", {"label": label, "type": "URL", "url": url, "color": color})
 
+    # Layout is deliberate: the doctype Dashboard View auto-arranges its widgets,
+    # but a workspace lets us set column spans, so the numbers sit in one even
+    # row of 3 (4+4+4=12) above a full-width chart, then the links below.
     content = [
-        {
-            "id": "dagvhdr001",
-            "type": "header",
-            "data": {"text": '<span class="h4"><b>DAGV</b></span>', "col": 12},
-        }
+        {"id": "dagvhdr001", "type": "header",
+         "data": {"text": '<span class="h4"><b>Visão geral</b></span>', "col": 12}},
+        {"id": "dagvnc0001", "type": "number_card",
+         "data": {"number_card_name": "Membros ativos", "col": 4}},
+        {"id": "dagvnc0002", "type": "number_card",
+         "data": {"number_card_name": "Aguardando decisão", "col": 4}},
+        {"id": "dagvnc0003", "type": "number_card",
+         "data": {"number_card_name": "Áreas ativas", "col": 4}},
+        {"id": "dagvch0001", "type": "chart",
+         "data": {"chart_name": "Membros por área", "col": 12}},
+        {"id": "dagvhdr002", "type": "header",
+         "data": {"text": '<span class="h4"><b>Atalhos</b></span>', "col": 12}},
     ]
     for i, (label, _url, _color) in enumerate(DAGV_SHORTCUTS):
         content.append(
@@ -236,11 +246,11 @@ def pin_to_home():
 
 def after_migrate():
     """Re-apply everything ERPNext's own migrations would wipe."""
+    setup_dashboard()
     setup_desk_navigation()
     setup_sidebar()
     setup_desktop_icon()
     setup_aprovacoes_workspace()
-    setup_dashboard()
     pin_to_home()
 
 
@@ -386,9 +396,12 @@ def setup_dashboard():
     """
     made = []
 
+    # Colours are a Color (hex) field — the word "Green" is not valid and Frappe
+    # falls back to a random colour, so every one is set explicitly. Meaning, not
+    # decoration: green = healthy, amber = needs a decision, gold = DAGV brand.
     cards = [
-        ("Membros ativos", {"status": "Approved"}, "Green"),
-        ("Aguardando decisão", {"status": ["in", ["Requested", "Leave Requested"]]}, "Orange"),
+        ("Membros ativos", {"status": "Approved"}, "#2F7D4F"),
+        ("Aguardando decisão", {"status": ["in", ["Requested", "Leave Requested"]]}, "#C2740E"),
     ]
     for label, filters, color in cards:
         if frappe.db.exists("Number Card", label):
@@ -408,6 +421,25 @@ def setup_dashboard():
         doc.save() if not doc.is_new() else doc.insert()
         made.append(doc.name)
 
+    # Third card so the row divides evenly across 12 columns instead of
+    # leaving a ragged gap.
+    if frappe.db.exists("Number Card", "Áreas ativas"):
+        areas_card = frappe.get_doc("Number Card", "Áreas ativas")
+    else:
+        areas_card = frappe.new_doc("Number Card")
+        areas_card.label = "Áreas ativas"
+    areas_card.type = "Document Type"
+    areas_card.document_type = "DAGV Area"
+    areas_card.function = "Count"
+    areas_card.filters_json = frappe.as_json({"is_active": 1})
+    areas_card.is_public = 1
+    areas_card.show_percentage_stats = 0
+    areas_card.color = "#B69B1A"
+    areas_card.module = "DAGV"
+    areas_card.flags.ignore_permissions = True
+    areas_card.save() if not areas_card.is_new() else areas_card.insert()
+    made.append(areas_card.name)
+
     chart = "Membros por área"
     if frappe.db.exists("Dashboard Chart", chart):
         doc = frappe.get_doc("Dashboard Chart", chart)
@@ -423,6 +455,7 @@ def setup_dashboard():
     # whose missing .append resolves to None -> "NoneType is not callable".
     doc.filters_json = frappe.as_json([["DAGV Membership", "status", "=", "Approved"]])
     doc.type = "Bar"                  # comparing sizes across areas, not a trend
+    doc.color = "#B69B1A"             # DAGV gold, never the random default
     doc.is_public = 1
     doc.module = "DAGV"
     doc.flags.ignore_permissions = True
