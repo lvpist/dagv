@@ -54,6 +54,11 @@ def _workspace(name, title, icon, sequence, roles, content, shortcuts=None,
     doc.is_hidden = 0
     doc.icon = icon
     doc.sequence_id = sequence
+    # Must be "" and not NULL: Frappe filters these with an empty-string
+    # comparison, and NULL never matches, so the page silently disappears from
+    # everyone's sidebar. Every stock workspace stores "" here.
+    doc.for_user = ""
+    doc.parent_page = ""
 
     doc.set("roles", [])
     for role in roles:
