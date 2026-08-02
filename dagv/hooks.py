@@ -15,11 +15,38 @@ doc_events = {
         "before_insert": "dagv.provisioning.validate_fgv_email",
         "on_update": "dagv.provisioning.provision_on_approval",
     },
+    "DAGV Membership": {
+        # A member may ask to join an area; nobody may grant it to themselves.
+        "before_insert": "dagv.permissions.guard_membership",
+    },
+    "Task": {
+        # Someone in a single area never has to pick one.
+        "before_insert": "dagv.work.set_task_defaults",
+    },
     # Raven auto-adds system users but leaves them disabled, which silently
     # breaks workspace/channel membership. Enable them on creation.
     "Raven User": {
         "after_insert": "dagv.provisioning.force_enable_raven_user",
     },
+}
+
+# ---------------------------------------------------------------------------
+# Row-level access. "Your area is your boundary."
+# ---------------------------------------------------------------------------
+# Frappe asks two separate questions — which rows go in a list, and may this one
+# document be opened — so both have to be answered or the rule has a hole. The
+# implementations live together in dagv/permissions.py for exactly that reason.
+
+permission_query_conditions = {
+    "DAGV Membership": "dagv.permissions.membership_query",
+    "Task": "dagv.permissions.task_query",
+    "Project": "dagv.permissions.project_query",
+}
+
+has_permission = {
+    "DAGV Membership": "dagv.permissions.membership_permission",
+    "Task": "dagv.permissions.work_permission",
+    "Project": "dagv.permissions.work_permission",
 }
 
 # Standard workspaces are rewritten on migrate, so our Home pins and the DAGV

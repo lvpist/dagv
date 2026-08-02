@@ -158,9 +158,9 @@ def brand_the_site():
     return applied
 
 DAGV_SHORTCUTS = [
-    ("Meu painel", "/desk/meu-dagv", "#B69B1A"),
-    ("Aprovações", "/desk/aprovações", "#C2740E"),
-    ("Gestão", "/desk/gestão", "#868E96"),
+    ("Meu DAGV", "/app/meu-dagv", "#B69B1A"),
+    ("Aprovações", "/app/aprovações", "#C2740E"),
+    ("Gestão", "/app/gestão", "#868E96"),
     ("Raven (chat)", "/raven", "#2F7D4F"),
 ]
 
@@ -195,31 +195,15 @@ def setup_desk_navigation():
     for label, url, color in DAGV_SHORTCUTS:
         doc.append("shortcuts", {"label": label, "type": "URL", "url": url, "color": color})
 
-    # A workspace has to DECLARE its cards and charts in these child tables —
-    # referencing them from the content blocks alone renders nothing.
+    # Deliberately a plain index and nothing else. This page used to repeat Meu
+    # DAGV's dashboard, which meant two pages answering the same question and
+    # neither owning it. The numbers live where the work is; this is a door.
     doc.set("number_cards", [])
-    for card in ("Membros ativos", "Aguardando decisão", "Áreas ativas"):
-        doc.append("number_cards", {"number_card_name": card, "label": card})
-
     doc.set("charts", [])
-    doc.append("charts", {"chart_name": "Membros por área", "label": "Membros por área"})
 
-    # Layout is deliberate: the doctype Dashboard View auto-arranges its widgets,
-    # but a workspace lets us set column spans, so the numbers sit in one even
-    # row of 3 (4+4+4=12) above a full-width chart, then the links below.
     content = [
         {"id": "dagvhdr001", "type": "header",
-         "data": {"text": '<span class="h4"><b>Visão geral</b></span>', "col": 12}},
-        {"id": "dagvnc0001", "type": "number_card",
-         "data": {"number_card_name": "Membros ativos", "col": 4}},
-        {"id": "dagvnc0002", "type": "number_card",
-         "data": {"number_card_name": "Aguardando decisão", "col": 4}},
-        {"id": "dagvnc0003", "type": "number_card",
-         "data": {"number_card_name": "Áreas ativas", "col": 4}},
-        {"id": "dagvch0001", "type": "chart",
-         "data": {"chart_name": "Membros por área", "col": 12}},
-        {"id": "dagvhdr002", "type": "header",
-         "data": {"text": '<span class="h4"><b>Atalhos</b></span>', "col": 12}},
+         "data": {"text": '<span class="h4"><b>DAGV</b></span>', "col": 12}},
     ]
     for i, (label, _url, _color) in enumerate(DAGV_SHORTCUTS):
         content.append(
@@ -283,15 +267,19 @@ def pin_to_home():
 
 
 def after_migrate():
-    """Re-apply everything ERPNext's own migrations would wipe."""
+    """Re-apply everything ERPNext's own migrations would wipe.
+
+    Order matters: the org-wide cards exist before the pages that place them,
+    and build_index() owns every page — including Aprovações, which used to be
+    built twice by two functions that disagreed about its layout.
+    """
     setup_dashboard()
+    from dagv.desk_index import build_index
+    build_index()
     setup_desk_navigation()
     setup_sidebar()
     setup_desktop_icon()
     brand_the_site()
-    setup_aprovacoes_workspace()
-    from dagv.desk_index import build_index
-    build_index()
     pin_to_home()
 
 
@@ -315,9 +303,13 @@ def setup_sidebar():
     doc.app = "erpnext"
     doc.standard = 0
 
+    # Ordered by how often someone needs it, not by how the data is organised:
+    # work first, decisions second, the records themselves last.
     doc.set("items", [])
     doc.append("items", {"type": "Link", "label": "Meu DAGV",
                          "link_type": "Workspace", "link_to": "Meu DAGV"})
+    doc.append("items", {"type": "Link", "label": "Tarefas",
+                         "link_type": "DocType", "link_to": "Task"})
     doc.append("items", {"type": "Link", "label": "Aprovações",
                          "link_type": "Workspace", "link_to": "Aprovações"})
     doc.append("items", {"type": "Link", "label": "Gestão",
@@ -363,15 +355,13 @@ def setup_desktop_icon():
     return {"desktop_icon": doc.name}
 
 
-def setup_aprovacoes_workspace():
-    """Native replacement for the custom /aprovacoes page.
+def _retired_setup_aprovacoes_workspace():
+    """RETIRED — Aprovações is built by dagv.desk_index.build_aprovacoes().
 
-    Hierarchy comes from the counts: the three things that need a decision sit
-    first and carry a live number, so the page answers "is there anything for me
-    to do?" before you read a word. Settled records are one row further down.
+    Kept only as a record of what it used to be. Two functions built this same
+    page with different layouts, and whichever ran last won; the page is now
+    owned by the desk index like every other page. Do not call this.
     """
-    # Name has no accent so the route stays /desk/aprovacoes; the label carries
-    # the proper spelling for display.
     name = "Aprovacoes"
     doc = (
         frappe.get_doc("Workspace", name)

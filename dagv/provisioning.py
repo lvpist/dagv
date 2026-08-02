@@ -21,7 +21,11 @@ RAVEN_ROLE = "Raven User"
 # Modules every member keeps regardless of area. Everything else in ERPNext is
 # hidden unless one of their areas asks for it — that's the decluttering.
 # DAGV is the members' own landing area and Raven is the chat — never hide either.
-ALWAYS_VISIBLE = {"Raven", "DAGV"}
+# Projects is here because Task lives in it: blocking the module would break the
+# board and every task shortcut on Meu DAGV. Its *workspace* is role-gated
+# instead (see desk_index.declutter_sidebar), so the sidebar stays clean without
+# taking people's own work away from them.
+ALWAYS_VISIBLE = {"Raven", "DAGV", "Projects"}
 
 # Blocking modules only declutters the sidebar — a workspace still has to be
 # *permitted* to show up. So each module an area unlocks also grants the standard
