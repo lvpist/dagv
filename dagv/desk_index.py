@@ -108,8 +108,11 @@ def build_meu_dagv():
         {"id": "mds3", "type": "shortcut", "data": {"shortcut_name": "Abrir o chat", "col": 3}},
         {"id": "mds4", "type": "shortcut", "data": {"shortcut_name": "Áreas do DAGV", "col": 3}},
     ]
+    # Deliberately unrestricted: this page is for everyone who can log in, and a
+    # role gate here only risks locking members out of their own landing page.
+    # The DAGV module is always visible, so only members reach it anyway.
     return _workspace("Meu DAGV", "Meu DAGV", "users", 0.4,
-                      [MEMBER_ROLE], content, shortcuts=shortcuts)
+                      [], content, shortcuts=shortcuts)
 
 
 def build_gestao():
