@@ -419,7 +419,9 @@ def setup_dashboard():
     doc.group_by_type = "Count"
     doc.group_by_based_on = "area"
     doc.number_of_groups = 0          # every area, not a top-N slice
-    doc.filters_json = frappe.as_json({"status": "Approved"})
+    # Charts want a LIST of conditions here. A dict becomes a frappe._dict,
+    # whose missing .append resolves to None -> "NoneType is not callable".
+    doc.filters_json = frappe.as_json([["DAGV Membership", "status", "=", "Approved"]])
     doc.type = "Bar"                  # comparing sizes across areas, not a trend
     doc.is_public = 1
     doc.module = "DAGV"
