@@ -129,10 +129,10 @@ def seed_area_modules(overwrite=False):
 DAGV_WORKSPACE = "DAGV"
 
 DAGV_SHORTCUTS = [
-    ("Meu painel", "/painel", "Blue"),
-    ("Aprovações", "/aprovacoes", "Orange"),
-    ("Gestão", "/gestao", "Grey"),
-    ("Raven (chat)", "/raven", "Green"),
+    ("Meu painel", "/desk/meu-dagv", "#B69B1A"),
+    ("Aprovações", "/desk/aprovações", "#C2740E"),
+    ("Gestão", "/desk/gestão", "#868E96"),
+    ("Raven (chat)", "/raven", "#2F7D4F"),
 ]
 
 
@@ -286,12 +286,12 @@ def setup_sidebar():
     doc.standard = 0
 
     doc.set("items", [])
-    doc.append("items", {"type": "Link", "label": "Painel do membro",
-                         "link_type": "URL", "url": "/painel"})
+    doc.append("items", {"type": "Link", "label": "Meu DAGV",
+                         "link_type": "Workspace", "link_to": "Meu DAGV"})
     doc.append("items", {"type": "Link", "label": "Aprovações",
-                         "link_type": "URL", "url": "/aprovacoes"})
+                         "link_type": "Workspace", "link_to": "Aprovações"})
     doc.append("items", {"type": "Link", "label": "Gestão",
-                         "link_type": "URL", "url": "/gestao"})
+                         "link_type": "Workspace", "link_to": "Gestão"})
     doc.append("items", {"type": "Link", "label": "Áreas",
                          "link_type": "DocType", "link_to": "DAGV Area"})
     doc.append("items", {"type": "Link", "label": "Membros",
