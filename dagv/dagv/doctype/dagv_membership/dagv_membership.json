@@ -42,7 +42,8 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Cargo",
-   "options": "Membro\nCoordenador\nDiretor\nVice-Diretor"
+   "options": "Membro\nCoordenador\nDiretor\nVice-Diretor",
+   "in_standard_filter": 1
   },
   {
    "default": "Requested",
@@ -56,31 +57,36 @@
   {
    "fieldname": "decision_section",
    "fieldtype": "Section Break",
-   "label": "Decisão"
+   "label": "Decisão",
+   "in_list_view": 0
   },
   {
    "fieldname": "requested_on",
    "fieldtype": "Datetime",
    "label": "Solicitado em",
-   "read_only": 1
+   "read_only": 1,
+   "in_list_view": 0
   },
   {
    "fieldname": "decided_on",
    "fieldtype": "Datetime",
    "label": "Decidido em",
-   "read_only": 1
+   "read_only": 1,
+   "in_list_view": 0
   },
   {
    "fieldname": "decided_by",
    "fieldtype": "Link",
    "label": "Decidido por",
    "options": "User",
-   "read_only": 1
+   "read_only": 1,
+   "in_list_view": 0
   },
   {
    "fieldname": "notes",
    "fieldtype": "Small Text",
-   "label": "Observações"
+   "label": "Observações",
+   "in_list_view": 0
   }
  ],
  "index_web_pages_for_search": 1,
@@ -107,5 +113,6 @@
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "track_changes": 1
+ "track_changes": 1,
+ "search_fields": "member,area,status"
 }

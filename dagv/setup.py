@@ -239,6 +239,7 @@ def after_migrate():
     setup_desk_navigation()
     setup_sidebar()
     setup_desktop_icon()
+    setup_aprovacoes_workspace()
     pin_to_home()
 
 
@@ -307,3 +308,66 @@ def setup_desktop_icon():
     doc.save(ignore_permissions=True) if not doc.is_new() else doc.insert(ignore_permissions=True)
     frappe.db.commit()
     return {"desktop_icon": doc.name}
+
+
+def setup_aprovacoes_workspace():
+    """Native replacement for the custom /aprovacoes page.
+
+    Hierarchy comes from the counts: the three things that need a decision sit
+    first and carry a live number, so the page answers "is there anything for me
+    to do?" before you read a word. Settled records are one row further down.
+    """
+    name = "Aprovações"
+    doc = (
+        frappe.get_doc("Workspace", name)
+        if frappe.db.exists("Workspace", name)
+        else frappe.new_doc("Workspace")
+    )
+    doc.name = name
+    doc.title = name
+    doc.label = name
+    doc.module = "DAGV"
+    doc.app = "dagv"
+    doc.public = 1
+    doc.is_hidden = 0
+    doc.icon = "check"
+    doc.sequence_id = 0.6
+
+    # (label, doctype, filters, colour)
+    queues = [
+        ("Cadastros novos", "DAGV Registration Request", {"status": "Pending"}, "Orange"),
+        ("Pedidos de entrada", "DAGV Membership", {"status": "Requested"}, "Orange"),
+        ("Pedidos de saída", "DAGV Membership", {"status": "Leave Requested"}, "Red"),
+        ("Membros ativos", "DAGV Membership", {"status": "Approved"}, "Green"),
+    ]
+
+    doc.set("shortcuts", [])
+    for label, dt, filters, color in queues:
+        doc.append(
+            "shortcuts",
+            {
+                "label": label,
+                "type": "DocType",
+                "link_to": dt,
+                "color": color,
+                "stats_filter": frappe.as_json(filters),
+                "doc_view": "List",
+            },
+        )
+
+    content = [
+        {"id": "aprhdr0001", "type": "header",
+         "data": {"text": '<span class="h4"><b>Precisa de decisão</b></span>', "col": 12}},
+        {"id": "aprsc00001", "type": "shortcut", "data": {"shortcut_name": "Cadastros novos", "col": 4}},
+        {"id": "aprsc00002", "type": "shortcut", "data": {"shortcut_name": "Pedidos de entrada", "col": 4}},
+        {"id": "aprsc00003", "type": "shortcut", "data": {"shortcut_name": "Pedidos de saída", "col": 4}},
+        {"id": "aprhdr0002", "type": "header",
+         "data": {"text": '<span class="h4"><b>Quadro atual</b></span>', "col": 12}},
+        {"id": "aprsc00004", "type": "shortcut", "data": {"shortcut_name": "Membros ativos", "col": 4}},
+    ]
+    doc.content = frappe.as_json(content)
+
+    doc.flags.ignore_permissions = True
+    doc.save() if not doc.is_new() else doc.insert()
+    frappe.db.commit()
+    return {"workspace": doc.name, "queues": [q[0] for q in queues]}
