@@ -515,6 +515,7 @@ def build_index():
     from dagv.work import sync as sync_work
 
     from dagv.approvals import configure_invites
+    from dagv.homescreen import sync as sync_homescreen
     from dagv.portal import sync as sync_portal
 
     ensure_roles()
@@ -523,6 +524,9 @@ def build_index():
     sync_forms()
     configure_invites()
     sync_portal()
+    # Por último: as pastas dependem das áreas, dos papéis e das permissões que
+    # tudo acima acabou de assentar.
+    sync_homescreen()
     ensure_decision_cards()
     made = {
         "meu_dagv": build_meu_dagv(),
