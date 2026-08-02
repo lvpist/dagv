@@ -39,8 +39,16 @@ doc_events = {
 # document be opened — so both have to be answered or the rule has a hole. The
 # implementations live together in dagv/permissions.py for exactly that reason.
 
-# The Área picker on a Task offers only the áreas you belong to.
-doctype_js = {"Task": "public/js/task.js"}
+# The desk's own theme. A Website Theme record does NOT reach /desk — it styles
+# the public site — so desk branding has to come in through the app like this.
+app_include_css = "/assets/dagv/css/dagv_desk.css"
+
+# The Área picker on a Task offers only the áreas you belong to, and a ToDo
+# forwards to the work it stands for instead of being a page of its own.
+doctype_js = {
+    "Task": "public/js/task.js",
+    "ToDo": "public/js/todo.js",
+}
 
 permission_query_conditions = {
     "DAGV Membership": "dagv.permissions.membership_query",

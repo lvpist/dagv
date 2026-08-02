@@ -1,0 +1,204 @@
+/* DAGV — desk theme
+ *
+ * Loaded into /desk through `app_include_css`. Website Theme records do NOT
+ * reach the desk; they style the public site. This is the desk's equivalent.
+ *
+ * The idea: the DAGV crest is a muted institutional gold, and gold is a very
+ * easy colour to ruin a UI with. So it is never a fill and never a button — it
+ * is the accent that marks *where you are* and *what matters*: the section
+ * rules, the active page, the focus ring, the hero number. Frappe's near-black
+ * primary stays exactly where it is, because a restrained neutral with one
+ * warm accent reads institutional, and thirteen solid colours read like a toy.
+ *
+ * Everything is expressed against Frappe's own variables and re-declared under
+ * [data-theme="dark"], so both themes are first-class rather than one being an
+ * afterthought that goes unreadable.
+ */
+
+:root {
+	--dagv-gold: #9c8416; /* darkened from the crest's #B69B1A: on white, the
+	                         crest gold sits near 2.6:1 and fails as text */
+	--dagv-gold-bright: #b69b1a; /* the true crest colour, for fills and rules */
+	--dagv-gold-soft: rgba(182, 155, 26, 0.11);
+	--dagv-gold-line: rgba(182, 155, 26, 0.36);
+	--dagv-rule: var(--border-color);
+	--dagv-label: var(--text-light);
+}
+
+[data-theme="dark"] {
+	/* The crest gold is too dim on near-black; lifted until it reads as the
+	   same colour rather than a muddy brown. */
+	--dagv-gold: #d9bd42;
+	--dagv-gold-bright: #d9bd42;
+	--dagv-gold-soft: rgba(217, 189, 66, 0.13);
+	--dagv-gold-line: rgba(217, 189, 66, 0.3);
+}
+
+/* ---------------------------------------------------------------------------
+ * Section headers on the workspaces
+ * The pages emit these as plain headings, which made every section shout at the
+ * same volume as the page title. As a tracked micro-label above a hairline they
+ * become what they actually are: signposts between groups of content.
+ * ------------------------------------------------------------------------- */
+
+.layout-main-section .ce-block .ce-header,
+.workspace-container .ce-block .ce-header {
+	font-size: var(--text-xs);
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--dagv-label);
+	margin: 26px 0 12px;
+	padding-bottom: 8px;
+	border-bottom: 1px solid var(--dagv-rule);
+}
+
+/* The first section sits right under the page title and needs no air above it. */
+.layout-main-section .ce-block:first-child .ce-header {
+	margin-top: 4px;
+}
+
+.layout-main-section .ce-block .ce-header .h4,
+.layout-main-section .ce-block .ce-header b {
+	font-size: inherit;
+	font-weight: inherit;
+	letter-spacing: inherit;
+	color: inherit;
+}
+
+/* ---------------------------------------------------------------------------
+ * Number cards — the number is the point
+ * Frappe gives the label and the value nearly equal weight, so a card reads as
+ * a sentence instead of a reading. The value becomes the hero; the label drops
+ * to a caption; a gold hairline on the left marks it as ours.
+ * ------------------------------------------------------------------------- */
+
+.widget.number-widget-box {
+	border: 1px solid var(--dagv-rule);
+	border-left: 2px solid var(--dagv-gold-line);
+	border-radius: var(--border-radius-md);
+	transition: border-color 120ms ease, transform 120ms ease;
+}
+
+.widget.number-widget-box:hover {
+	border-left-color: var(--dagv-gold-bright);
+	transform: translateY(-1px);
+}
+
+.widget.number-widget-box .widget-title {
+	font-size: var(--text-xs);
+	font-weight: 500;
+	letter-spacing: 0.02em;
+	color: var(--text-muted);
+}
+
+.widget.number-widget-box .widget-content .number {
+	font-size: var(--text-4xl);
+	font-weight: 650;
+	line-height: 1.1;
+	letter-spacing: -0.02em;
+}
+
+/* ---------------------------------------------------------------------------
+ * Quick lists — rows you can actually scan
+ * ------------------------------------------------------------------------- */
+
+.widget.quick-list-widget-box {
+	border: 1px solid var(--dagv-rule);
+	border-radius: var(--border-radius-md);
+}
+
+.widget.quick-list-widget-box .quick-list-item {
+	border-bottom: 1px solid var(--dagv-rule);
+	transition: background-color 120ms ease;
+}
+
+.widget.quick-list-widget-box .quick-list-item:last-child {
+	border-bottom: none;
+}
+
+.widget.quick-list-widget-box .quick-list-item:hover {
+	background-color: var(--dagv-gold-soft);
+}
+
+/* ---------------------------------------------------------------------------
+ * Shortcuts — they are actions, so they should feel pressable
+ * The hover sets a background, so it must also own its text colour: a bare
+ * background hover is how label text goes invisible on one theme.
+ * ------------------------------------------------------------------------- */
+
+.widget.shortcut-widget-box {
+	border: 1px solid var(--dagv-rule);
+	border-radius: var(--border-radius-md);
+	transition: border-color 120ms ease, background-color 120ms ease,
+		transform 120ms ease;
+}
+
+.widget.shortcut-widget-box:hover {
+	border-color: var(--dagv-gold-line);
+	background-color: var(--dagv-gold-soft);
+	transform: translateY(-1px);
+}
+
+.widget.shortcut-widget-box:hover .widget-title,
+.widget.shortcut-widget-box:hover .indicator-pill {
+	color: var(--text-color);
+}
+
+/* ---------------------------------------------------------------------------
+ * Where am I — the one place gold earns real estate
+ * ------------------------------------------------------------------------- */
+
+.standard-sidebar-item.selected,
+.sidebar-item-container .selected > .desk-sidebar-item {
+	box-shadow: inset 2px 0 0 var(--dagv-gold-bright);
+}
+
+a:not(.btn):not(.dropdown-item):hover {
+	color: var(--dagv-gold);
+}
+
+*:focus-visible {
+	outline: 2px solid var(--dagv-gold-bright);
+	outline-offset: 1px;
+}
+
+/* ---------------------------------------------------------------------------
+ * The board
+ * ------------------------------------------------------------------------- */
+
+.kanban .kanban-card {
+	border: 1px solid var(--dagv-rule);
+	border-radius: var(--border-radius);
+	transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.kanban .kanban-card:hover {
+	border-color: var(--dagv-gold-line);
+	box-shadow: var(--shadow-sm);
+}
+
+.kanban .kanban-column .kanban-column-title {
+	font-size: var(--text-xs);
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+
+/* ---------------------------------------------------------------------------
+ * Forms — the six fields deserve room to breathe
+ * ------------------------------------------------------------------------- */
+
+.form-layout .form-section .section-head {
+	font-size: var(--text-xs);
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--dagv-label);
+}
+
+.form-layout .frappe-control[data-fieldname="subject"] .control-value,
+.form-layout .frappe-control[data-fieldname="subject"] input {
+	font-size: var(--text-lg);
+	font-weight: 600;
+}

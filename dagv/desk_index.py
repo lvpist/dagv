@@ -430,11 +430,13 @@ def declutter_sidebar():
 
 def build_index():
     """Build the whole index in one go."""
+    from dagv.forms import sync as sync_forms
     from dagv.work import sync as sync_work
 
     ensure_roles()
     ensure_permissions()
     sync_work()
+    sync_forms()
     ensure_decision_cards()
     made = {
         "meu_dagv": build_meu_dagv(),
