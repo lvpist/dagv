@@ -128,6 +128,35 @@ def seed_area_modules(overwrite=False):
 
 DAGV_WORKSPACE = "DAGV"
 
+# Served from the site's own files rather than an external CDN, so branding
+# never depends on someone else's server staying up.
+DAGV_LOGO = "/files/dagv-logo.png"
+
+
+def brand_the_site():
+    """Use the DAGV crest wherever the desk shows a logo, and as the favicon."""
+    applied = {}
+
+    if frappe.db.exists("DocType", "Navbar Settings"):
+        nav = frappe.get_single("Navbar Settings")
+        if nav.meta.get_field("app_logo"):
+            nav.app_logo = DAGV_LOGO
+            nav.flags.ignore_permissions = True
+            nav.save()
+            applied["navbar"] = DAGV_LOGO
+
+    web = frappe.get_single("Website Settings")
+    for field in ("favicon", "app_logo", "banner_image"):
+        if web.meta.get_field(field):
+            setattr(web, field, DAGV_LOGO)
+            applied[field] = DAGV_LOGO
+    web.flags.ignore_permissions = True
+    web.save()
+
+    frappe.db.commit()
+    frappe.clear_cache()
+    return applied
+
 DAGV_SHORTCUTS = [
     ("Meu painel", "/desk/meu-dagv", "#B69B1A"),
     ("Aprovações", "/desk/aprovações", "#C2740E"),
@@ -259,6 +288,7 @@ def after_migrate():
     setup_desk_navigation()
     setup_sidebar()
     setup_desktop_icon()
+    brand_the_site()
     setup_aprovacoes_workspace()
     from dagv.desk_index import build_index
     build_index()
@@ -324,6 +354,7 @@ def setup_desktop_icon():
     doc.link_type = "External"   # same shape Raven uses
     doc.link = "/desk/dagv"
     doc.app = "dagv"
+    doc.logo_url = DAGV_LOGO     # the real crest, not a generic glyph
     doc.standard = 0
     doc.hidden = 0
     doc.flags.ignore_permissions = True
