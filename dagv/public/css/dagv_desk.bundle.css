@@ -25,6 +25,7 @@
 	/* Não herda --text-light: no tema escuro ele cai para 2.3:1 e o rótulo de
 	   seção fica ilegível. Fixado por tema, medido: 5.4:1 no claro. */
 	--dagv-label: #6b6b6b;
+	--dagv-help: #5c5c5c;  /* 6.7:1 sobre branco */
 }
 
 [data-theme="dark"] {
@@ -42,6 +43,7 @@
 	   sobre #383838, 8.3:1 e 6.5:1 sobre o fundo #171717. */
 	--text-muted: #b0b0b0;
 	--text-light: #a6a6a6;
+	--dagv-help: #b0b0b0;  /* 8.3:1 sobre #171717 */
 }
 
 /* ---------------------------------------------------------------------------
@@ -303,4 +305,13 @@ a:not(.btn):not(.dropdown-item):hover {
 .dagv-plain-user .add-sidebar-item,
 .dagv-plain-user [data-label="Add Sidebar Item"] {
 	display: none !important;
+}
+
+/* Texto de ajuda: e o que explica a tela para quem chegou agora, entao precisa
+   passar de 4.5:1 nos dois temas. Herdando .text-muted ficava em 4.17:1 no
+   claro - discreto demais para o que ele faz. */
+.page-body .ce-paragraph,
+.page-body .ce-paragraph span,
+.page-body .ce-block .ce-paragraph .text-muted {
+	color: var(--dagv-help);
 }
