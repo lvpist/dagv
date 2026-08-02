@@ -343,6 +343,51 @@ def set_task_defaults(doc, method=None):
         doc.set(AREA_FIELD, areas[0])
 
 
+def guard_task_area(doc, method=None):
+    """You cannot file work into an área you are not in.
+
+    The form only offers your áreas (see area_link_query), but a dropdown is a
+    convenience, not a rule — the API is still open. Enforced here so the answer
+    is the same however the record arrives.
+    """
+    from dagv.permissions import is_unrestricted
+
+    if is_unrestricted() or not doc.get(AREA_FIELD):
+        return
+    if doc.get(AREA_FIELD) not in my_areas():
+        frappe.throw(
+            f"Você não faz parte da área {doc.get(AREA_FIELD)}, "
+            "então não pode criar trabalho nela.",
+            title="Área não permitida",
+        )
+
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def area_link_query(doctype, txt, searchfield, start, page_len, filters):
+    """The Área dropdown on a Task offers only the áreas you are in."""
+    from dagv.permissions import is_unrestricted
+
+    conditions = {"is_active": 1}
+    if not is_unrestricted():
+        allowed = my_areas()
+        if not allowed:
+            return []
+        conditions["name"] = ["in", allowed]
+    if txt:
+        conditions["area_name"] = ["like", f"%{txt}%"]
+
+    return frappe.get_all(
+        "DAGV Area",
+        filters=conditions,
+        fields=["name", "category"],
+        order_by="sort_order asc, area_name asc",
+        limit_start=start,
+        limit_page_length=page_len,
+        as_list=True,
+    )
+
+
 # ERPNext's pt-BR translation covers some Task statuses and not others, so the
 # board came out reading "Aberto / Working / Pending Review / Concluído". These
 # are the gaps, filled through Frappe's own Translation records — the same thing

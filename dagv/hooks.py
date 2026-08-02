@@ -22,6 +22,8 @@ doc_events = {
     "Task": {
         # Someone in a single area never has to pick one.
         "before_insert": "dagv.work.set_task_defaults",
+        # ...and nobody files work into an area they are not in.
+        "validate": "dagv.work.guard_task_area",
     },
     # Raven auto-adds system users but leaves them disabled, which silently
     # breaks workspace/channel membership. Enable them on creation.
@@ -36,6 +38,9 @@ doc_events = {
 # Frappe asks two separate questions — which rows go in a list, and may this one
 # document be opened — so both have to be answered or the rule has a hole. The
 # implementations live together in dagv/permissions.py for exactly that reason.
+
+# The Área picker on a Task offers only the áreas you belong to.
+doctype_js = {"Task": "public/js/task.js"}
 
 permission_query_conditions = {
     "DAGV Membership": "dagv.permissions.membership_query",
