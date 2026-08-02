@@ -41,7 +41,13 @@ doc_events = {
 
 # The desk's own theme. A Website Theme record does NOT reach /desk — it styles
 # the public site — so desk branding has to come in through the app like this.
-app_include_css = "/assets/dagv/css/dagv_desk.css"
+#
+# Referenced as a *bundle*, not as a plain /assets path. Frappe's builder emits
+# it as dagv_desk.<hash>.css and resolves the name through assets.json, so a
+# changed stylesheet reaches people who already have the old one cached. The
+# plain path has no version in it: browsers held the first version indefinitely
+# and every later edit was invisible to anyone who had already loaded the desk.
+app_include_css = "dagv_desk.bundle.css"
 
 # The Área picker on a Task offers only the áreas you belong to, and a ToDo
 # forwards to the work it stands for instead of being a page of its own.

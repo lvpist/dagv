@@ -15,7 +15,8 @@
   "turma",
   "desired_areas",
   "email_format_ok",
-  "status"
+  "status",
+  "invite_link"
  ],
  "fields": [
   {
@@ -96,6 +97,14 @@
    "label": "Situação",
    "options": "Pending\nApproved\nRejected",
    "in_standard_filter": 1
+  },
+  {
+   "fieldname": "invite_link",
+   "fieldtype": "Small Text",
+   "label": "Link de acesso",
+   "read_only": 1,
+   "depends_on": "eval:doc.status=='Approved'",
+   "description": "Link de uso único para a pessoa criar a senha dela. Enviado por e-mail quando houver SMTP configurado; até lá, copie e mande no WhatsApp ou no Raven."
   }
  ],
  "index_web_pages_for_search": 1,

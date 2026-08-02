@@ -193,8 +193,74 @@ def approve_registration(registration, areas=None, reject=False):
         ).insert(ignore_permissions=True)
         granted.append(area)
 
+    invite = issue_invite(email)
+    doc.db_set("invite_link", invite, update_modified=False)
+
     frappe.db.commit()
-    return {"ok": True, "status": APPROVED, "granted": granted}
+    return {
+        "ok": True,
+        "status": APPROVED,
+        "granted": granted,
+        "invite": invite,
+        "full_name": doc.full_name,
+        "email": email,
+    }
+
+
+def issue_invite(email):
+    """A one-time link the approver hands over, because e-mail does not work yet.
+
+    Approving somebody creates their account but never gives them a password —
+    Frappe's answer is to e-mail a "set your password" link, and this site has
+    no outgoing mail account, so an approved member had literally no way in.
+    Nobody noticed because the two accounts that exist were only ever reached
+    through server-side sessions.
+
+    So the link is generated here and shown to whoever approved: they paste it
+    into WhatsApp or Raven. It is Frappe's own reset mechanism, single use and
+    time-limited, so it stays a real invite rather than a shared password. The
+    moment SMTP exists this keeps working and the e-mail simply arrives too.
+    """
+    if not frappe.db.exists("User", email):
+        return None
+    user = frappe.get_doc("User", email)
+    # `_reset_password` in this Frappe version — the public `reset_password`
+    # helper is a whitelisted endpoint that *sends* mail, which is exactly the
+    # step that does not work here. This generates the key and returns the URL.
+    return user._reset_password(send_email=False)
+
+
+INVITE_VALID_FOR = 7 * 24 * 60 * 60  # seconds
+
+
+def configure_invites():
+    """Give an invite long enough to survive being sent by a person.
+
+    Frappe's default reset link lasts 20 minutes, which is right for "I forgot
+    my password" and wrong for "a diretor approved you and will paste this into
+    the group chat tonight". A week matches how the DAGV actually onboards, and
+    the link is still single-use.
+    """
+    current = frappe.db.get_single_value("System Settings", "reset_password_link_expiry_duration")
+    if current == INVITE_VALID_FOR:
+        return {"unchanged": current}
+    frappe.db.set_single_value(
+        "System Settings", "reset_password_link_expiry_duration", INVITE_VALID_FOR
+    )
+    frappe.db.commit()
+    return {"was": current, "now": INVITE_VALID_FOR}
+
+
+@frappe.whitelist()
+def invite_for(email):
+    """Re-issue an invite — links expire, and people lose them."""
+    if not is_user_manager():
+        frappe.throw("Apenas o executivo pode gerar links de acesso.")
+    link = issue_invite(email)
+    if not link:
+        frappe.throw(f"Não existe conta para {email}.")
+    frappe.db.commit()
+    return {"invite": link, "email": email}
 
 
 # ---------------------------------------------------------------------------

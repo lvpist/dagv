@@ -433,10 +433,13 @@ def build_index():
     from dagv.forms import sync as sync_forms
     from dagv.work import sync as sync_work
 
+    from dagv.approvals import configure_invites
+
     ensure_roles()
     ensure_permissions()
     sync_work()
     sync_forms()
+    configure_invites()
     ensure_decision_cards()
     made = {
         "meu_dagv": build_meu_dagv(),

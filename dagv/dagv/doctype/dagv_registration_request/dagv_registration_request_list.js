@@ -38,7 +38,7 @@ frappe.listview_settings["DAGV Registration Request"] = {
 								})
 								.catch((e) => e)
 						)
-					).then(() => {
+					).then((results) => {
 						frappe.dom.unfreeze();
 						listview.refresh();
 						frappe.show_alert(
@@ -48,6 +48,12 @@ frappe.listview_settings["DAGV Registration Request"] = {
 							},
 							4
 						);
+
+						// Approving creates the accounts but cannot mail anybody:
+						// the site has no outgoing e-mail. Hand the approver the
+						// links so the people they just let in can actually get in.
+						const invites = (results || []).filter((r) => r && r.invite);
+						if (!reject && invites.length) show_invites(invites);
 					});
 				}
 			);
@@ -57,3 +63,29 @@ frappe.listview_settings["DAGV Registration Request"] = {
 		listview.page.add_action_item(__("Recusar"), () => decide(true));
 	},
 };
+
+// Until SMTP exists, the invite is delivered by a human. Make that one click:
+// one block of text, ready to paste into the group chat.
+function show_invites(invites) {
+	const lines = invites.map((i) => `${i.full_name || i.email}: ${i.invite}`).join("\n");
+	const d = new frappe.ui.Dialog({
+		title: __("Links de acesso"),
+		size: "large",
+		fields: [
+			{
+				fieldtype: "HTML",
+				options: `<p class="text-muted" style="margin-bottom:8px">
+					Ainda não há e-mail configurado no site, então estes links não foram
+					enviados. Cada um serve uma vez e é onde a pessoa cria a senha dela.
+					Mande no WhatsApp ou no Raven.</p>`,
+			},
+			{ fieldtype: "Code", fieldname: "links", label: __("Copie e envie"), default: lines },
+		],
+		primary_action_label: __("Copiar tudo"),
+		primary_action() {
+			frappe.utils.copy_to_clipboard(lines);
+			d.hide();
+		},
+	});
+	d.show();
+}

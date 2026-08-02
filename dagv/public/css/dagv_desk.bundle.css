@@ -66,6 +66,13 @@
 	color: inherit;
 }
 
+/* Note on specificity: every widget rule below is scoped to `.page-body`.
+ * Frappe styles the same elements with the same weight (`.widget.number-widget-box`)
+ * and its stylesheet loads after this one, so an equally specific rule here is
+ * silently discarded — the gold rule and the hero number were dropped exactly
+ * that way before this scope was added.
+ */
+
 /* ---------------------------------------------------------------------------
  * Number cards — the number is the point
  * Frappe gives the label and the value nearly equal weight, so a card reads as
@@ -73,26 +80,31 @@
  * to a caption; a gold hairline on the left marks it as ours.
  * ------------------------------------------------------------------------- */
 
-.widget.number-widget-box {
+.page-body .widget.number-widget-box {
 	border: 1px solid var(--dagv-rule);
-	border-left: 2px solid var(--dagv-gold-line);
+	/* Longhands, not the `border-left` shorthand: when the theme is toggled at
+	   runtime the shorthand keeps its first-resolved colour, so the gold stayed
+	   on its light-mode value until a reload. Longhands re-resolve. */
+	border-left-width: 2px;
+	border-left-style: solid;
+	border-left-color: var(--dagv-gold-line);
 	border-radius: var(--border-radius-md);
 	transition: border-color 120ms ease, transform 120ms ease;
 }
 
-.widget.number-widget-box:hover {
+.page-body .widget.number-widget-box:hover {
 	border-left-color: var(--dagv-gold-bright);
 	transform: translateY(-1px);
 }
 
-.widget.number-widget-box .widget-title {
+.page-body .widget.number-widget-box .widget-title {
 	font-size: var(--text-xs);
 	font-weight: 500;
 	letter-spacing: 0.02em;
 	color: var(--text-muted);
 }
 
-.widget.number-widget-box .widget-content .number {
+.page-body .widget.number-widget-box .widget-content .number {
 	font-size: var(--text-4xl);
 	font-weight: 650;
 	line-height: 1.1;
@@ -103,21 +115,21 @@
  * Quick lists — rows you can actually scan
  * ------------------------------------------------------------------------- */
 
-.widget.quick-list-widget-box {
+.page-body .widget.quick-list-widget-box {
 	border: 1px solid var(--dagv-rule);
 	border-radius: var(--border-radius-md);
 }
 
-.widget.quick-list-widget-box .quick-list-item {
+.page-body .widget.quick-list-widget-box .quick-list-item {
 	border-bottom: 1px solid var(--dagv-rule);
 	transition: background-color 120ms ease;
 }
 
-.widget.quick-list-widget-box .quick-list-item:last-child {
+.page-body .widget.quick-list-widget-box .quick-list-item:last-child {
 	border-bottom: none;
 }
 
-.widget.quick-list-widget-box .quick-list-item:hover {
+.page-body .widget.quick-list-widget-box .quick-list-item:hover {
 	background-color: var(--dagv-gold-soft);
 }
 
@@ -127,21 +139,21 @@
  * background hover is how label text goes invisible on one theme.
  * ------------------------------------------------------------------------- */
 
-.widget.shortcut-widget-box {
+.page-body .widget.shortcut-widget-box {
 	border: 1px solid var(--dagv-rule);
 	border-radius: var(--border-radius-md);
 	transition: border-color 120ms ease, background-color 120ms ease,
 		transform 120ms ease;
 }
 
-.widget.shortcut-widget-box:hover {
+.page-body .widget.shortcut-widget-box:hover {
 	border-color: var(--dagv-gold-line);
 	background-color: var(--dagv-gold-soft);
 	transform: translateY(-1px);
 }
 
-.widget.shortcut-widget-box:hover .widget-title,
-.widget.shortcut-widget-box:hover .indicator-pill {
+.page-body .widget.shortcut-widget-box:hover .widget-title,
+.page-body .widget.shortcut-widget-box:hover .indicator-pill {
 	color: var(--text-color);
 }
 
@@ -167,18 +179,18 @@ a:not(.btn):not(.dropdown-item):hover {
  * The board
  * ------------------------------------------------------------------------- */
 
-.kanban .kanban-card {
+.page-body .kanban .kanban-card {
 	border: 1px solid var(--dagv-rule);
 	border-radius: var(--border-radius);
 	transition: border-color 120ms ease, box-shadow 120ms ease;
 }
 
-.kanban .kanban-card:hover {
+.page-body .kanban .kanban-card:hover {
 	border-color: var(--dagv-gold-line);
 	box-shadow: var(--shadow-sm);
 }
 
-.kanban .kanban-column .kanban-column-title {
+.page-body .kanban .kanban-column .kanban-column-title {
 	font-size: var(--text-xs);
 	font-weight: 600;
 	letter-spacing: 0.06em;
