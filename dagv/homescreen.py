@@ -31,20 +31,11 @@ de facto privada.
 
 import frappe
 
-# O que cada módulo põe na pasta da área. Deliberadamente curto: duas ou três
-# entradas que alguém abre mesmo, não o menu inteiro do ERPNext.
-# Cada uma exige o papel que o módulo concede — é isso que fecha a pasta.
-MODULE_TOOLS = {
-    "Stock": [("Itens", "Item"), ("Movimentos de estoque", "Stock Entry")],
-    "Selling": [("Clientes", "Customer"), ("Vendas", "Sales Invoice")],
-    "Buying": [("Fornecedores", "Supplier"), ("Compras", "Purchase Invoice")],
-    "Accounts": [("Pagamentos", "Payment Entry"), ("Lançamentos", "Journal Entry")],
-    "Support": [("Demandas", "Issue")],
-    "CRM": [("Contactos", "Contact")],
-    # Projects não entra: Tarefa é de todos os membros, e um atalho para ela numa
-    # pasta de área faria essa pasta aparecer para toda a gente.
-    "Projects": [],
-}
+# Nada de mapa escrito à mão aqui. O que entra numa pasta são **as páginas dos
+# módulos que a própria área destrava** (`DAGV Area.erp_modules`), descobertas
+# no momento: `Workspace.module` já diz a que módulo cada página pertence.
+# A versão anterior tinha um mapa "módulo -> estes doctypes" inventado por mim,
+# e era isso que fazia o conteúdo parecer aleatório.
 
 # O que fica no ecrã, além das pastas das áreas.
 KEEP_SIDEBARS = {"dagv", "raven", "my workspaces"}
@@ -120,12 +111,16 @@ def ensure_area_workspace(area):
     # VPAE também concede, então a pasta de Institucional aparecia a quem é de
     # VPAE. O papel da área é o único gate que não é partilhado.
     for module in _area_modules(area):
-        for label, doctype in MODULE_TOOLS.get(module, []):
-            if frappe.db.exists("DocType", doctype):
-                doc.append("shortcuts", {
-                    "label": label, "type": "DocType",
-                    "link_to": doctype, "doc_view": "List", "color": "#868E96",
-                })
+        for ws in frappe.get_all(
+            "Workspace",
+            filters={"module": module, "public": 1},
+            fields=["name", "title"],
+            order_by="sequence_id asc",
+        ):
+            doc.append("shortcuts", {
+                "label": ws.title or ws.name, "type": "URL",
+                "url": f"/desk/{_route(ws.name)}", "color": "#868E96",
+            })
 
     doc.set("number_cards", [])
     doc.set("charts", [])
@@ -237,6 +232,127 @@ def suppress_other_sidebars():
     return suppressed
 
 
+def _route(text):
+    """Rota do desk: minúsculas, espaços viram hífen. 'Área Financeiro' -> area-financeiro."""
+    import re
+    import unicodedata
+
+    slug = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode()
+    return re.sub(r"[^a-z0-9]+", "-", slug.lower()).strip("-")
+
+
+def _icon(label, **values):
+    doc = (
+        frappe.get_doc("Desktop Icon", label)
+        if frappe.db.exists("Desktop Icon", label)
+        else frappe.new_doc("Desktop Icon")
+    )
+    doc.label = label
+    for key, value in values.items():
+        setattr(doc, key, value)
+    doc.standard = 0
+    doc.hidden = 0
+    doc.flags.ignore_permissions = True
+    doc.save(ignore_permissions=True) if not doc.is_new() else doc.insert(ignore_permissions=True)
+    return doc
+
+
+def ensure_area_icon(area):
+    """Uma pasta de verdade no ecrã inicial, com os ícones da área lá dentro.
+
+    O Frappe tem mesmo pastas: `Desktop Icon` com `icon_type = "Folder"`, e os
+    filhos apontam para ela por `parent_icon`. Foi por aqui que se devia ter
+    começado — a primeira tentativa pendurou o ícone numa `Workspace Sidebar`,
+    que dá um atalho solto e não uma pasta.
+
+    O gate é a tabela `roles` do próprio ícone: a pasta de Financeiro só existe
+    para quem tem o papel de Financeiro. Os filhos herdam — o Frappe descarta
+    qualquer filho cujo pai não passou (`parent_icon in permitted_parent_labels`).
+
+    E como cada filho é o seu próprio registo, **o mesmo destino pode estar em
+    várias pastas**: "Itens" aparece em Produtos e em Financeiro sem conflito,
+    que era exatamente o ponto.
+    """
+    role = _area_role(area)
+    if not frappe.db.exists("Role", role):
+        return None
+
+    pasta = _icon(
+        area,
+        icon_type="Folder",
+        parent_icon=None,
+        sidebar=None,
+        link_type=None,
+        link=None,
+        icon="folder-normal",
+    )
+    pasta.set("roles", [])
+    pasta.append("roles", {"role": role})
+    pasta.flags.ignore_permissions = True
+    pasta.save(ignore_permissions=True)
+
+    # Filhos: `App` porque o Frappe só faz a verificação de sidebar no tipo
+    # `Link`, e aqui quem manda na visibilidade é o pai.
+    filhos = [(f"{area} · Painel", f"/desk/{_route('Área ' + area)}")]
+    for module in _area_modules(area):
+        for ws in frappe.get_all(
+            "Workspace",
+            filters={"module": module, "public": 1},
+            fields=["name", "title"],
+            order_by="sequence_id asc",
+        ):
+            filhos.append((f"{area} · {ws.title or ws.name}", f"/desk/{_route(ws.name)}"))
+
+    for i, (label, url) in enumerate(filhos):
+        _icon(label, icon_type="App", app="erpnext", parent_icon=area,
+              link_type="External", link=url, idx=i, sidebar=None)
+
+    # Tirar um módulo da área tem de tirar o ícone: sem isto o ecrã guardava
+    # atalhos para ferramentas que a área já não usa.
+    validos = {label for label, _ in filhos}
+    for antigo in frappe.get_all(
+        "Desktop Icon", filters={"parent_icon": area}, pluck="name"
+    ):
+        if antigo not in validos:
+            frappe.delete_doc("Desktop Icon", antigo, force=1, ignore_permissions=True)
+
+    return area
+
+
+def hide_other_icons():
+    """No ecrã ficam DAGV, Raven e as pastas das áreas. Mais nada.
+
+    As pastas das áreas escondem-se sozinhas pelo papel, mas os ícones que vêm
+    de origem — ERPNext, Accounting — não têm papel nenhum e apareciam a toda a
+    gente. `hidden` é o interruptor do próprio Frappe: some do ecrã e volta
+    desmarcando a caixa, sem apagar nada.
+    """
+    areas = set(frappe.get_all("DAGV Area", pluck="name"))
+    manter = {"DAGV", "Raven"} | areas
+
+    escondidos = []
+    for icon in frappe.get_all("Desktop Icon", fields=["name", "label", "parent_icon", "hidden"]):
+        if icon.label in manter or icon.parent_icon in areas:
+            continue
+        if icon.hidden:
+            continue
+        # `hidden` não chega para os ícones `standard` que o ERPNext traz: a
+        # consulta do boot inclui `standard == 1` sempre e nunca filtra por
+        # `hidden`, então "Accounting" e "ERPNext" continuavam no ecrã mesmo
+        # marcados. Para esses, o registo sai — e volta a sair no próximo sync
+        # se o migrate os recriar.
+        if frappe.db.get_value("Desktop Icon", icon.name, "standard"):
+            frappe.delete_doc("Desktop Icon", icon.name, force=1, ignore_permissions=True)
+        else:
+            frappe.db.set_value("Desktop Icon", icon.name, "hidden", 1, update_modified=False)
+        escondidos.append(icon.label)
+
+    frappe.cache.delete_key("desktop_icons")
+    # Sem commit aqui: isto também corre dentro de eventos de documento, e o
+    # Frappe ignora (com aviso) commits nesse contexto. Quem chama é que fecha.
+    return escondidos
+
+
 def reconcile_area_roles():
     """Tira papéis de área a quem já não tem filiação aprovada nela.
 
@@ -264,8 +380,32 @@ def reconcile_area_roles():
                 frappe.get_doc("User", user).remove_roles(role)
                 limpos.append(f"{user}: -{role}")
         frappe.clear_cache(user=user)
-    frappe.db.commit()
     return limpos
+
+
+def on_area_change(doc, method=None):
+    """Mexer numa área reflecte-se no ecrã na hora, não só no próximo migrate."""
+    if doc.is_active:
+        ensure_area_folder(doc.name)
+        ensure_area_icon(doc.name)
+    else:
+        on_area_removed(doc)
+    hide_other_icons()
+    frappe.cache.delete_key("desktop_icons")
+    frappe.clear_cache()
+
+
+def on_area_removed(doc, method=None):
+    """Apagar ou desactivar uma área leva a pasta, os ícones e a página dela."""
+    area = doc.name if hasattr(doc, "name") else doc
+    for child in frappe.get_all("Desktop Icon", filters={"parent_icon": area}, pluck="name"):
+        frappe.delete_doc("Desktop Icon", child, force=1, ignore_permissions=True)
+    for name, doctype in ((area, "Desktop Icon"), (area, "Workspace Sidebar"),
+                          (f"Área {area}", "Workspace")):
+        if frappe.db.exists(doctype, name):
+            frappe.delete_doc(doctype, name, force=1, ignore_permissions=True)
+    frappe.cache.delete_key("desktop_icons")
+    frappe.clear_cache()
 
 
 def sync():
@@ -273,9 +413,11 @@ def sync():
     for area in frappe.get_all("DAGV Area", filters={"is_active": 1}, pluck="name"):
         f = ensure_area_folder(area)
         if f:
+            ensure_area_icon(area)
             made.append(f)
     hidden = suppress_other_sidebars()
+    icones = hide_other_icons()
     limpos = reconcile_area_roles()
     frappe.db.commit()
     frappe.clear_cache()
-    return {"pastas": made, "suprimidas": len(hidden), "papeis_limpos": limpos}
+    return {"pastas": made, "suprimidas": len(hidden), "icones_escondidos": len(icones), "papeis_limpos": limpos}

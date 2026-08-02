@@ -15,6 +15,14 @@ doc_events = {
         "before_insert": "dagv.provisioning.validate_fgv_email",
         "on_update": "dagv.provisioning.provision_on_approval",
     },
+    # Criar, renomear, activar ou mudar os módulos de uma área tem de aparecer no
+    # ecrã na hora. Antes só acontecia no `migrate`, o que quer dizer que uma
+    # diretoria futura mexia numa área e não via nada mudar.
+    "DAGV Area": {
+        "on_update": "dagv.homescreen.on_area_change",
+        "after_rename": "dagv.homescreen.on_area_change",
+        "on_trash": "dagv.homescreen.on_area_removed",
+    },
     "DAGV Membership": {
         # A member may ask to join an area; nobody may grant it to themselves.
         "before_insert": "dagv.permissions.guard_membership",
