@@ -317,15 +317,17 @@ def setup_aprovacoes_workspace():
     first and carry a live number, so the page answers "is there anything for me
     to do?" before you read a word. Settled records are one row further down.
     """
-    name = "Aprovações"
+    # Name has no accent so the route stays /desk/aprovacoes; the label carries
+    # the proper spelling for display.
+    name = "Aprovacoes"
     doc = (
         frappe.get_doc("Workspace", name)
         if frappe.db.exists("Workspace", name)
         else frappe.new_doc("Workspace")
     )
     doc.name = name
-    doc.title = name
-    doc.label = name
+    doc.title = "Aprovações"
+    doc.label = "Aprovações"
     doc.module = "DAGV"
     doc.app = "dagv"
     doc.public = 1
