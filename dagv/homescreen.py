@@ -65,7 +65,7 @@ def ensure_area_workspace(area):
     if not frappe.db.exists("Role", role):
         return None
 
-    name = f"Área {area}"
+    name = area
     doc = (
         frappe.get_doc("Workspace", name)
         if frappe.db.exists("Workspace", name)
@@ -124,19 +124,32 @@ def ensure_area_workspace(area):
 
     doc.set("number_cards", [])
     doc.set("charts", [])
-    doc.content = frappe.as_json([
-        {"id": f"a{abs(hash(area)) % 9999}h", "type": "header",
+    # Um widget declarado na tabela filha mas não referenciado aqui não aparece
+    # — os atalhos dos módulos da área estavam a ser criados e nunca desenhados.
+    tag = abs(hash(area)) % 9999
+    blocos = [
+        {"id": f"a{tag}h", "type": "header",
          "data": {"text": f'<span class="h4"><b>{area}</b></span>', "col": 12}},
-        {"id": f"a{abs(hash(area)) % 9999}p", "type": "paragraph",
-         "data": {"text": '<span class="text-muted">O trabalho aberto desta área. '
-                          'O quadro mostra tudo o que você pode ver.</span>', "col": 12}},
-        {"id": f"a{abs(hash(area)) % 9999}q", "type": "quick_list",
+        {"id": f"a{tag}p", "type": "paragraph",
+         "data": {"text": '<span class="text-muted">O trabalho aberto desta área.</span>',
+                  "col": 12}},
+        {"id": f"a{tag}q", "type": "quick_list",
          "data": {"quick_list_name": label, "col": 6}},
-        {"id": f"a{abs(hash(area)) % 9999}s", "type": "shortcut",
+        {"id": f"a{tag}s", "type": "shortcut",
          "data": {"shortcut_name": "Nova tarefa", "col": 3}},
-        {"id": f"a{abs(hash(area)) % 9999}k", "type": "shortcut",
+        {"id": f"a{tag}k", "type": "shortcut",
          "data": {"shortcut_name": f"Quadro de {area}", "col": 3}},
-    ])
+    ]
+    ferramentas = [sc.label for sc in doc.shortcuts
+                   if sc.label not in ("Nova tarefa", f"Quadro de {area}")]
+    if ferramentas:
+        blocos.append({"id": f"a{tag}fh", "type": "header",
+                       "data": {"text": '<span class="h4"><b>Ferramentas da área</b></span>',
+                                "col": 12}})
+        for i, nome in enumerate(ferramentas):
+            blocos.append({"id": f"a{tag}f{i}", "type": "shortcut",
+                           "data": {"shortcut_name": nome, "col": 3}})
+    doc.content = frappe.as_json(blocos)
     doc.flags.ignore_permissions = True
     doc.save() if not doc.is_new() else doc.insert()
     return name
@@ -233,12 +246,16 @@ def suppress_other_sidebars():
 
 
 def _route(text):
-    """Rota do desk: minúsculas, espaços viram hífen. 'Área Financeiro' -> area-financeiro."""
-    import re
-    import unicodedata
+    """Rota do desk: minúsculas e espaços viram hífen — **com acento**.
 
-    slug = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode()
-    return re.sub(r"[^a-z0-9]+", "-", slug.lower()).strip("-")
+    O Frappe não guarda a rota em campo nenhum, monta-a do nome. E mantém o
+    acento: `/desk/aprovações` abre, `/desk/aprovacoes` não. A primeira versão
+    disto tirava os acentos e por isso todos os "Painel" davam página não
+    encontrada.
+    """
+    import re
+
+    return re.sub(r"[^\w]+", "-", text.lower(), flags=re.UNICODE).strip("-")
 
 
 def _icon(label, **values):
@@ -293,7 +310,9 @@ def ensure_area_icon(area):
 
     # Filhos: `App` porque o Frappe só faz a verificação de sidebar no tipo
     # `Link`, e aqui quem manda na visibilidade é o pai.
-    filhos = [(f"{area} · Painel", f"/desk/{_route('Área ' + area)}")]
+    # Ferramenta primeiro: o ecrã corta o rótulo, e "Parcerias · ..." três vezes
+    # não diz nada. "Painel · Parc..." ainda diz.
+    filhos = [(f"Painel · {area}", f"/desk/{_route(area)}")]
     for module in _area_modules(area):
         for ws in frappe.get_all(
             "Workspace",
@@ -301,7 +320,7 @@ def ensure_area_icon(area):
             fields=["name", "title"],
             order_by="sequence_id asc",
         ):
-            filhos.append((f"{area} · {ws.title or ws.name}", f"/desk/{_route(ws.name)}"))
+            filhos.append((f"{ws.title or ws.name} · {area}", f"/desk/{_route(ws.name)}"))
 
     for i, (label, url) in enumerate(filhos):
         _icon(label, icon_type="App", app="erpnext", parent_icon=area,
@@ -401,14 +420,23 @@ def on_area_removed(doc, method=None):
     for child in frappe.get_all("Desktop Icon", filters={"parent_icon": area}, pluck="name"):
         frappe.delete_doc("Desktop Icon", child, force=1, ignore_permissions=True)
     for name, doctype in ((area, "Desktop Icon"), (area, "Workspace Sidebar"),
-                          (f"Área {area}", "Workspace")):
+                          (area, "Workspace")):
         if frappe.db.exists(doctype, name):
             frappe.delete_doc(doctype, name, force=1, ignore_permissions=True)
     frappe.cache.delete_key("desktop_icons")
     frappe.clear_cache()
 
 
+def _drop_legacy_workspaces():
+    """As páginas chamavam-se "Área X" e a rota saía com acento removido. Saem."""
+    for area in frappe.get_all("DAGV Area", pluck="name"):
+        antigo = f"Área {area}"
+        if frappe.db.exists("Workspace", antigo):
+            frappe.delete_doc("Workspace", antigo, force=1, ignore_permissions=True)
+
+
 def sync():
+    _drop_legacy_workspaces()
     made = []
     for area in frappe.get_all("DAGV Area", filters={"is_active": 1}, pluck="name"):
         f = ensure_area_folder(area)
