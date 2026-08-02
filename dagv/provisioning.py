@@ -12,6 +12,8 @@ Two entry points, both wired through ``doc_events``/controllers:
 Registration approval (Phase 0) stays below: it creates the account itself.
 """
 
+from contextlib import contextmanager
+
 import frappe
 
 GERAL_WORKSPACE = "Geral"
@@ -153,12 +155,37 @@ def _ensure_workspace(title, public=False):
 # Memberships
 # ---------------------------------------------------------------------------
 
+@contextmanager
+def as_system():
+    """Provisioning é ação do sistema, não escrita de quem aprovou.
+
+    Conceder uma área mexe em `User` (papéis, módulos, landing) e no Raven. Quem
+    aprova é liderança, que — de propósito — não tem permissão sobre User. Sem
+    isto o pedido era marcado como aprovado e logo a seguir estourava
+    PermissionError: a filiação ficava "Approved" e a pessoa **não recebia papel
+    nenhum**. Aprovar não dava acesso a nada, e nada no ecrã dizia isso.
+
+    Quem pode decidir já foi verificado antes (`_guard` / `membership_permission`);
+    isto eleva só o efeito colateral, não a decisão.
+    """
+    user = frappe.session.user
+    frappe.set_user("Administrator")
+    try:
+        yield
+    finally:
+        frappe.set_user(user)
+
+
 def apply_membership(membership):
     """Grant or revoke an area's access to match the membership's status."""
     email = membership.member
     if not email or not membership.area:
         return
+    with as_system():
+        _apply_membership(membership, email)
 
+
+def _apply_membership(membership, email):
     area = frappe.get_cached_doc("DAGV Area", membership.area)
 
     if membership.status == APPROVED:
