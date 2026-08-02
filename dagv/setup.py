@@ -240,6 +240,7 @@ def after_migrate():
     setup_sidebar()
     setup_desktop_icon()
     setup_aprovacoes_workspace()
+    setup_dashboard()
     pin_to_home()
 
 
@@ -373,3 +374,58 @@ def setup_aprovacoes_workspace():
     doc.save() if not doc.is_new() else doc.insert()
     frappe.db.commit()
     return {"workspace": doc.name, "queues": [q[0] for q in queues]}
+
+
+def setup_dashboard():
+    """Native Dashboard View for the membership list.
+
+    Two number cards answer "is there anything for me to do?", and the chart
+    answers the question a diretoria actually asks — which areas are staffed and
+    which are empty. Everything here is a normal ERPNext record, so a future
+    admin can add or change widgets from Customize without any code.
+    """
+    made = []
+
+    cards = [
+        ("Membros ativos", {"status": "Approved"}, "Green"),
+        ("Aguardando decisão", {"status": ["in", ["Requested", "Leave Requested"]]}, "Orange"),
+    ]
+    for label, filters, color in cards:
+        if frappe.db.exists("Number Card", label):
+            doc = frappe.get_doc("Number Card", label)
+        else:
+            doc = frappe.new_doc("Number Card")
+            doc.label = label
+        doc.type = "Document Type"
+        doc.document_type = "DAGV Membership"
+        doc.function = "Count"
+        doc.filters_json = frappe.as_json(filters)
+        doc.is_public = 1
+        doc.show_percentage_stats = 0
+        doc.color = color
+        doc.module = "DAGV"
+        doc.flags.ignore_permissions = True
+        doc.save() if not doc.is_new() else doc.insert()
+        made.append(doc.name)
+
+    chart = "Membros por área"
+    if frappe.db.exists("Dashboard Chart", chart):
+        doc = frappe.get_doc("Dashboard Chart", chart)
+    else:
+        doc = frappe.new_doc("Dashboard Chart")
+        doc.chart_name = chart
+    doc.chart_type = "Group By"
+    doc.document_type = "DAGV Membership"
+    doc.group_by_type = "Count"
+    doc.group_by_based_on = "area"
+    doc.number_of_groups = 0          # every area, not a top-N slice
+    doc.filters_json = frappe.as_json({"status": "Approved"})
+    doc.type = "Bar"                  # comparing sizes across areas, not a trend
+    doc.is_public = 1
+    doc.module = "DAGV"
+    doc.flags.ignore_permissions = True
+    doc.save() if not doc.is_new() else doc.insert()
+    made.append(doc.name)
+
+    frappe.db.commit()
+    return {"created": made}
