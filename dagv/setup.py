@@ -157,10 +157,12 @@ def brand_the_site():
     frappe.clear_cache()
     return applied
 
+# /desk is the canonical desk route on this build — /app redirects to it, and a
+# redirect on every click is a needless round trip.
 DAGV_SHORTCUTS = [
-    ("Meu DAGV", "/app/meu-dagv", "#B69B1A"),
-    ("Aprovações", "/app/aprovações", "#C2740E"),
-    ("Gestão", "/app/gestão", "#868E96"),
+    ("Meu DAGV", "/desk/meu-dagv", "#B69B1A"),
+    ("Aprovações", "/desk/aprovações", "#C2740E"),
+    ("Gestão", "/desk/gestão", "#868E96"),
     ("Raven (chat)", "/raven", "#2F7D4F"),
 ]
 
@@ -449,6 +451,9 @@ def setup_dashboard():
         doc.show_percentage_stats = 0
         doc.color = color
         doc.module = "DAGV"
+        # Cards count people, not money. See dagv.work.ensure_cards.
+        doc.currency = None
+        doc.show_full_number = 1
         doc.flags.ignore_permissions = True
         doc.save() if not doc.is_new() else doc.insert()
         made.append(doc.name)
@@ -468,6 +473,8 @@ def setup_dashboard():
     areas_card.show_percentage_stats = 0
     areas_card.color = "#B69B1A"
     areas_card.module = "DAGV"
+    areas_card.currency = None
+    areas_card.show_full_number = 1
     areas_card.flags.ignore_permissions = True
     areas_card.save() if not areas_card.is_new() else areas_card.insert()
     made.append(areas_card.name)

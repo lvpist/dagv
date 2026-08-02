@@ -170,12 +170,20 @@ def _mine(extra=None):
     return filters
 
 
-def _card(filters, empty_hint=None):
+def _card(filters):
+    """The shape a Custom number card expects back.
+
+    `fieldtype` is not decoration: the widget passes this whole dict to
+    frappe.format() as if it were a docfield, and with no fieldtype it formats
+    the count as **currency** — "R$ 3,00" open tasks. `route` and
+    `route_options` are what make the number clickable, landing on exactly the
+    records it counted instead of an unfiltered list.
+    """
     return {
         "value": frappe.db.count("Task", filters),
+        "fieldtype": "Int",
         "route": ["List", "Task"],
         "route_options": filters,
-        "hint": empty_hint,
     }
 
 
@@ -197,13 +205,29 @@ def card_my_late(filters=None):
     return _card(_mine({"exp_end_date": ["<", nowdate()]}))
 
 
+def _area_scope():
+    """Which áreas this card should count.
+
+    For the executive "minhas áreas" is the whole DAGV — they answer for all of
+    it — so they get no área filter rather than the accident of which áreas they
+    happen to hold a membership row in. Returns None for "no filter".
+    """
+    from dagv.permissions import is_unrestricted
+
+    if is_unrestricted():
+        return None
+    return my_areas()
+
+
 @frappe.whitelist()
 def card_area_open(filters=None):
     """Open work across every área I am in — my team's load, not just mine."""
-    areas = my_areas()
-    if not areas:
+    areas = _area_scope()
+    if areas == []:
         return {"value": 0, "route": ["List", "Task"], "route_options": {}}
-    f = {AREA_FIELD: ["in", areas], "status": ["in", OPEN_STATUSES]}
+    f = {"status": ["in", OPEN_STATUSES]}
+    if areas:
+        f[AREA_FIELD] = ["in", areas]
     return _card(f)
 
 
@@ -211,13 +235,16 @@ def card_area_open(filters=None):
 def card_area_unowned(filters=None):
     """Work in my áreas with nobody assigned.
 
-    The most useful number on the page: tasks with no owner are the ones that
-    quietly never happen.
+    The most useful number on the page: a task with no owner is the one that
+    quietly never happens. Frappe leaves `_assign` as NULL or an empty JSON
+    array depending on whether it was ever touched, so both count as nobody.
     """
-    areas = my_areas()
-    if not areas:
+    areas = _area_scope()
+    if areas == []:
         return {"value": 0, "route": ["List", "Task"], "route_options": {}}
-    f = {AREA_FIELD: ["in", areas], "status": ["in", OPEN_STATUSES], "_assign": ["in", ["", None]]}
+    f = {"status": ["in", OPEN_STATUSES], "_assign": ["in", ["", "[]", None]]}
+    if areas:
+        f[AREA_FIELD] = ["in", areas]
     return _card(f)
 
 
@@ -249,6 +276,12 @@ def ensure_cards():
         doc.show_percentage_stats = 0
         doc.color = color
         doc.module = "DAGV"
+        # Number Card defaults `currency` to the company's, and the widget then
+        # formats ANY card as money — "R$ 3,00" open tasks. These count things,
+        # never reais. Cleared explicitly, and shown in full so a count is the
+        # exact number rather than a shortened "1 K".
+        doc.currency = None
+        doc.show_full_number = 1
         doc.flags.ignore_permissions = True
         doc.save() if not doc.is_new() else doc.insert()
         made.append(doc.name)
@@ -310,10 +343,50 @@ def set_task_defaults(doc, method=None):
         doc.set(AREA_FIELD, areas[0])
 
 
+# ERPNext's pt-BR translation covers some Task statuses and not others, so the
+# board came out reading "Aberto / Working / Pending Review / Concluído". These
+# are the gaps, filled through Frappe's own Translation records — the same thing
+# the interface would write, so nothing here is a fork.
+TRANSLATIONS = {
+    "Working": "Em andamento",
+    "Pending Review": "Em revisão",
+    "Overdue": "Atrasado",
+    "Template": "Modelo",
+}
+
+
+def ensure_translations():
+    lang = frappe.db.get_single_value("System Settings", "language") or "pt-BR"
+    if not lang.lower().startswith("pt"):
+        return {"skipped": lang}
+
+    made = []
+    for source, translated in TRANSLATIONS.items():
+        existing = frappe.db.exists(
+            "Translation", {"language": lang, "source_text": source}
+        )
+        doc = (
+            frappe.get_doc("Translation", existing)
+            if existing
+            else frappe.new_doc("Translation")
+        )
+        doc.language = lang
+        doc.source_text = source
+        doc.translated_text = translated
+        doc.flags.ignore_permissions = True
+        doc.save() if not doc.is_new() else doc.insert()
+        made.append(source)
+
+    frappe.cache().delete_keys("translations")
+    frappe.db.commit()
+    return {"language": lang, "translated": made}
+
+
 def sync():
     """Everything in this module, in dependency order."""
     ensure_area_field()
     ensure_board()
     ensure_cards()
     ensure_charts()
+    ensure_translations()
     return {"ok": True}

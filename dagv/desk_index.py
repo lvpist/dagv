@@ -115,7 +115,14 @@ def _short(idx, name, col=3):
             "data": {"shortcut_name": name, "col": col}}
 
 
+# Only 3, 4, 6 and 12 map to responsive Bootstrap classes. Anything else (col 8
+# becomes a bare `col-xs-8`) keeps its width on a phone instead of going
+# full-width, so the block ends up two-thirds of a narrow screen. Use these.
+SPANS = (3, 4, 6, 12)
+
+
 def _chart(idx, name, col=12):
+    assert col in SPANS, f"col {col} has no responsive class"
     return {"id": f"ch{idx}", "type": "chart",
             "data": {"chart_name": name, "col": col}}
 
@@ -261,8 +268,8 @@ def build_gestao():
         _card("g3", "Áreas ativas"),
         _chart("g1", "Membros por área"),
         _header("g2", "Trabalho"),
-        _chart("g2", "Trabalho por área", col=8),
-        _chart("g3", "Trabalho por situação", col=4),
+        _chart("g2", "Trabalho por área", col=6),
+        _chart("g3", "Trabalho por situação", col=6),
         _header("g3", "Estrutura"),
         _short("g1", "Áreas", col=4),
         _short("g2", "Membros", col=4),
@@ -306,6 +313,10 @@ def ensure_decision_cards():
         doc.show_percentage_stats = 0
         doc.color = color
         doc.module = "DAGV"
+        # See dagv.work.ensure_cards: an unset currency is not "no currency",
+        # it is the company's, and the widget renders every count as money.
+        doc.currency = None
+        doc.show_full_number = 1
         doc.flags.ignore_permissions = True
         doc.save() if not doc.is_new() else doc.insert()
         made.append(doc.name)
