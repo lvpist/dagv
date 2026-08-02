@@ -423,26 +423,71 @@ def ensure_permissions():
     return {"ok": True}
 
 
-def declutter_sidebar():
-    """Keep the Projects module usable without putting it in everyone's face.
+# An área unlocks these by declaring the module, which grants the role. Gating
+# the *workspace* on that same role is what keeps them out of everyone else's
+# way — blocking the module is not enough, because the desk's workspace list is
+# built from Workspace.roles and ignores User.block_modules entirely. That gap
+# is why a member with no área at all was still being offered Contabilidade,
+# Compras, Vendas and Qualidade on the /desk screen.
+GATED_WORKSPACES = {
+    "Stock": "Stock User",
+    "Selling": "Sales User",
+    "Buying": "Purchase User",
+    "Invoicing": "Accounts User",
+    "Financial Reports": "Accounts User",
+    "CRM": "Sales User",
+    "Support": "Support Team",
+    "Projects": "Projects User",
+}
 
-    Task lives in the Projects module, so blocking that module for members
-    would break the very pages we just built. Instead the module stays open and
-    the *workspace* is role-gated: people whose área actually uses Projects (and
-    so hold Projects User) see it; everybody else gets a clean sidebar.
+# Administration, not work. Kept reachable for whoever runs the site, gone for
+# everybody else — restricted rather than hidden, so there is still a way in.
+ADMIN_WORKSPACES = ["Build", "Website", "Users", "Integrations", "ERPNext Settings", "Home"]
+
+# No área in a student union will ever run a factory or a quality department.
+UNUSED_WORKSPACES = ["Welcome Workspace", "Quality", "Manufacturing",
+                     "Subcontracting", "Assets"]
+
+
+def declutter_sidebar():
+    """Every ERPNext page either belongs to an área, to the admin, or to nobody.
+
+    Nothing is deleted: gating and hiding are both reversible from the interface,
+    so a future diretoria that starts selling merch turns Stock back on by
+    editing a record rather than by asking a developer.
     """
-    gated = []
-    for workspace, role in (("Projects", "Projects User"),):
-        if not frappe.db.exists("Workspace", workspace) or not frappe.db.exists("Role", role):
-            continue
+    done = {"gated": [], "admin": [], "hidden": []}
+
+    def set_roles(workspace, roles):
+        if not frappe.db.exists("Workspace", workspace):
+            return False
         doc = frappe.get_doc("Workspace", workspace)
-        if not any(r.role == role for r in doc.roles):
+        wanted = [r for r in roles if frappe.db.exists("Role", r)]
+        if not wanted:
+            return False
+        doc.set("roles", [])
+        for role in wanted:
             doc.append("roles", {"role": role})
-            doc.flags.ignore_permissions = True
-            doc.save()
-            gated.append(workspace)
+        doc.flags.ignore_permissions = True
+        doc.save()
+        return True
+
+    for workspace, role in GATED_WORKSPACES.items():
+        if set_roles(workspace, [role]):
+            done["gated"].append(workspace)
+
+    for workspace in ADMIN_WORKSPACES:
+        if set_roles(workspace, ["System Manager"]):
+            done["admin"].append(workspace)
+
+    for workspace in UNUSED_WORKSPACES:
+        if frappe.db.exists("Workspace", workspace):
+            frappe.db.set_value("Workspace", workspace, "is_hidden", 1)
+            done["hidden"].append(workspace)
+
     frappe.db.commit()
-    return {"gated": gated}
+    frappe.clear_cache()
+    return done
 
 
 def build_index():
