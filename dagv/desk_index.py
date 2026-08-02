@@ -352,10 +352,23 @@ def set_landing(email):
     their own work like everyone else's — sending them straight to a queue of
     other people's requests puts the DAGV's admin ahead of its actual work.
     Their pages are one click away in the sidebar.
+
+    Two settings, not one. `default_workspace` picks the page *inside* the desk,
+    but with three apps installed (frappe, erpnext, raven) Frappe still has to
+    choose which app to open, and with `default_app` unset it picked Raven — so
+    setting a password and logging in for the first time dropped you into chat
+    and never showed the desk at all. `erpnext` is the app whose route is
+    /desk; Raven stays one click away in the app switcher.
     """
     if frappe.db.exists("Workspace", "Meu DAGV"):
         frappe.db.set_value("User", email, "default_workspace", "Meu DAGV",
                             update_modified=False)
+    frappe.db.set_value("User", email, "default_app", "erpnext", update_modified=False)
+    # frappe.website.utils.get_home_page() caches its answer per user in Redis,
+    # so changing either setting above has no effect until that entry is dropped
+    # — the member kept being sent to the bare /desk workspace chooser long
+    # after their landing page was correct in the database.
+    frappe.cache.hdel("home_page", email)
     return "Meu DAGV"
 
 
@@ -383,8 +396,12 @@ def ensure_permissions():
 
     # --- the desk itself -----------------------------------------------------
     grant("Workspace", MEMBER_ROLE, read=1)
-    grant("Kanban Board", MEMBER_ROLE, read=1, write=1, create=1)
-    grant("DAGV Area", MEMBER_ROLE, read=1)
+    # Read only: moving a card edits the Task, not the board. Write here would
+    # let any member rename or delete the columns of the board everyone shares.
+    grant("Kanban Board", MEMBER_ROLE, read=1, write=0, create=0, delete=0)
+    grant("Kanban Board", LEAD_ROLE, read=1, write=1, create=1, delete=0)
+    # Nothing to export from a list of áreas; it only widens what can leave.
+    grant("DAGV Area", MEMBER_ROLE, read=1, export=0)
 
     # --- membership: read your own, ask to join, never decide ----------------
     grant("DAGV Membership", MEMBER_ROLE,
@@ -434,12 +451,14 @@ def build_index():
     from dagv.work import sync as sync_work
 
     from dagv.approvals import configure_invites
+    from dagv.portal import sync as sync_portal
 
     ensure_roles()
     ensure_permissions()
     sync_work()
     sync_forms()
     configure_invites()
+    sync_portal()
     ensure_decision_cards()
     made = {
         "meu_dagv": build_meu_dagv(),
