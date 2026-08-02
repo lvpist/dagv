@@ -174,6 +174,11 @@ def apply_membership(membership):
 
     sync_module_access(email)
 
+    # Rank decides which pages exist for this person, and where they land.
+    from dagv.desk_index import set_landing, sync_rank_roles
+    sync_rank_roles(email)
+    set_landing(email)
+
 
 def _ensure_raven_user(email, full_name=None):
     """Raven user must exist AND be enabled — a disabled Raven User is filtered

@@ -260,6 +260,8 @@ def after_migrate():
     setup_sidebar()
     setup_desktop_icon()
     setup_aprovacoes_workspace()
+    from dagv.desk_index import build_index
+    build_index()
     pin_to_home()
 
 
