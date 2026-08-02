@@ -214,6 +214,7 @@ def set_landing(email):
 def build_index():
     """Build the whole index in one go."""
     ensure_roles()
+    ensure_permissions()
     made = {
         "meu_dagv": build_meu_dagv(),
         "gestao": build_gestao(),
@@ -221,3 +222,32 @@ def build_index():
     }
     frappe.clear_cache()
     return made
+
+
+def ensure_permissions():
+    """Give the member role the reads it needs to see its own pages.
+
+    A role with desk access but no DocType permissions can log in and then see
+    nothing: the desk cannot even read the Workspace record, so every page
+    disappears with no visible error. Granted explicitly here rather than left
+    to inherited defaults.
+    """
+    from frappe.permissions import add_permission, update_permission_property
+
+    grants = [
+        # (doctype, role, {property: value})
+        ("Workspace", MEMBER_ROLE, {"read": 1}),
+        ("DAGV Area", MEMBER_ROLE, {"read": 1}),
+        # Members read their memberships and create one to ask to join an area.
+        ("DAGV Membership", MEMBER_ROLE, {"read": 1, "create": 1, "write": 1}),
+    ]
+
+    for doctype, role, props in grants:
+        if not frappe.db.exists("DocPerm", {"parent": doctype, "role": role}):
+            add_permission(doctype, role, 0)
+        for prop, value in props.items():
+            update_permission_property(doctype, role, 0, prop, value)
+
+    frappe.clear_cache()
+    frappe.db.commit()
+    return {"granted": [f"{d}:{r}" for d, r, _ in grants]}
