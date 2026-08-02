@@ -166,6 +166,15 @@ def setup_desk_navigation():
     for label, url, color in DAGV_SHORTCUTS:
         doc.append("shortcuts", {"label": label, "type": "URL", "url": url, "color": color})
 
+    # A workspace has to DECLARE its cards and charts in these child tables —
+    # referencing them from the content blocks alone renders nothing.
+    doc.set("number_cards", [])
+    for card in ("Membros ativos", "Aguardando decisão", "Áreas ativas"):
+        doc.append("number_cards", {"number_card_name": card, "label": card})
+
+    doc.set("charts", [])
+    doc.append("charts", {"chart_name": "Membros por área", "label": "Membros por área"})
+
     # Layout is deliberate: the doctype Dashboard View auto-arranges its widgets,
     # but a workspace lets us set column spans, so the numbers sit in one even
     # row of 3 (4+4+4=12) above a full-width chart, then the links below.
