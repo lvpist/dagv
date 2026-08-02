@@ -22,7 +22,9 @@
 	--dagv-gold-soft: rgba(182, 155, 26, 0.11);
 	--dagv-gold-line: rgba(182, 155, 26, 0.36);
 	--dagv-rule: var(--border-color);
-	--dagv-label: var(--text-light);
+	/* Não herda --text-light: no tema escuro ele cai para 2.3:1 e o rótulo de
+	   seção fica ilegível. Fixado por tema, medido: 5.4:1 no claro. */
+	--dagv-label: #6b6b6b;
 }
 
 [data-theme="dark"] {
@@ -32,6 +34,14 @@
 	--dagv-gold-bright: #d9bd42;
 	--dagv-gold-soft: rgba(217, 189, 66, 0.13);
 	--dagv-gold-line: rgba(217, 189, 66, 0.3);
+	--dagv-label: #a3a3a3; /* 7.3:1 sobre #171717, 4.6:1 sobre a linha #383838 */
+
+	/* O tema escuro do Frappe não redefine estes dois: --text-muted continua
+	   #525252, que sobre o cabeçalho de lista (#383838) dá 1.5:1. Isso atinge
+	   todo rótulo secundário do desk, não só os nossos. Medido: 5.3:1 e 4.8:1
+	   sobre #383838, 8.3:1 e 6.5:1 sobre o fundo #171717. */
+	--text-muted: #b0b0b0;
+	--text-light: #a6a6a6;
 }
 
 /* ---------------------------------------------------------------------------
@@ -213,4 +223,84 @@ a:not(.btn):not(.dropdown-item):hover {
 .form-layout .frappe-control[data-fieldname="subject"] input {
 	font-size: var(--text-lg);
 	font-weight: 600;
+}
+
+/* ---------------------------------------------------------------------------
+ * Listas
+ * A lista é onde se passa mais tempo depois do quadro, e era a superfície mais
+ * crua: cabeçalho do mesmo peso das linhas, e hover sem cor de texto própria.
+ * ------------------------------------------------------------------------- */
+
+.page-body .list-row-head {
+	font-size: var(--text-xs);
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--dagv-label);
+	border-bottom: 1px solid var(--dagv-rule);
+}
+
+/* O cabeçalho de coluna carrega .text-muted E uma regra própria do Frappe que
+   fixa a cor; no escuro sobrava 1.5:1. É o único ponto onde !important se
+   justifica: é uma correção de legibilidade sobre regra de framework, não uma
+   preferência de estilo. */
+.page-body .list-row-head,
+.page-body .list-row-head .list-subject,
+.page-body .list-row-head .list-row-col,
+.page-body .list-row-head span {
+	color: var(--dagv-label) !important;
+}
+
+.page-body .list-row-container:hover {
+	background-color: var(--dagv-gold-soft);
+}
+
+/* Um hover que troca o fundo precisa mandar na cor do texto junto, senão o
+   rótulo some no tema em que o contraste virou. */
+.page-body .list-row-container:hover,
+.page-body .list-row-container:hover .list-subject,
+.page-body .list-row-container:hover a.ellipsis {
+	color: var(--text-color);
+}
+
+/* ---------------------------------------------------------------------------
+ * Diálogos — aprovar, atribuir, novo: é onde as decisões acontecem
+ * ------------------------------------------------------------------------- */
+
+.modal .modal-header {
+	border-bottom: 1px solid var(--dagv-rule);
+}
+
+.modal .modal-title {
+	font-size: var(--text-md);
+	font-weight: 600;
+	letter-spacing: -0.01em;
+}
+
+.modal .modal-footer {
+	border-top: 1px solid var(--dagv-rule);
+}
+
+/* ---------------------------------------------------------------------------
+ * Formulário — rótulos como legenda, valor como conteúdo
+ * ------------------------------------------------------------------------- */
+
+.form-layout .frappe-control .control-label {
+	font-size: var(--text-xs);
+	font-weight: 500;
+	color: var(--text-muted);
+	letter-spacing: 0.01em;
+}
+
+/* Indicador de situação: pilula discreta, não um adesivo. */
+.page-body .indicator-pill {
+	font-size: var(--text-tiny);
+	font-weight: 600;
+	letter-spacing: 0.03em;
+}
+
+/* Só quem administra remonta a navegação (ver public/js/dagv_desk.bundle.js). */
+.dagv-plain-user .add-sidebar-item,
+.dagv-plain-user [data-label="Add Sidebar Item"] {
+	display: none !important;
 }

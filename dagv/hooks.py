@@ -48,6 +48,7 @@ doc_events = {
 # plain path has no version in it: browsers held the first version indefinitely
 # and every later edit was invisible to anyone who had already loaded the desk.
 app_include_css = "dagv_desk.bundle.css"
+app_include_js = "dagv_desk.bundle.js"
 
 # The Área picker on a Task offers only the áreas you belong to, and a ToDo
 # forwards to the work it stands for instead of being a page of its own.
