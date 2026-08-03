@@ -394,17 +394,17 @@ def hide_other_icons():
     for icon in frappe.get_all("Desktop Icon", fields=["name", "label", "parent_icon", "hidden"]):
         if icon.label in manter or icon.parent_icon in areas:
             continue
-        if icon.hidden:
-            continue
-        # `hidden` não chega para os ícones `standard` que o ERPNext traz: a
-        # consulta do boot inclui `standard == 1` sempre e nunca filtra por
-        # `hidden`, então "Accounting" e "ERPNext" continuavam no ecrã mesmo
-        # marcados. Para esses, o registo sai — e volta a sair no próximo sync
-        # se o migrate os recriar.
-        if frappe.db.get_value("Desktop Icon", icon.name, "standard"):
-            frappe.delete_doc("Desktop Icon", icon.name, force=1, ignore_permissions=True)
-        else:
-            frappe.db.set_value("Desktop Icon", icon.name, "hidden", 1, update_modified=False)
+        # Sem saltar os já marcados: `hidden` nunca fez nada aqui, e era
+        # justamente nesses que faltava trocar o dono.
+        # `hidden` não serve: a consulta do boot é
+        #     standard == 1  OU  (standard == 0 E owner em (Administrator, tu))
+        # e **nunca olha para `hidden`**. Marcar escondido não fazia nada, e
+        # apagar também não porque o ERPNext recria. O que tira mesmo é falhar
+        # a condição: standard = 0 e dono que não é nem o Administrator nem
+        # quem está a ver. Reversível — basta devolver o dono.
+        frappe.db.set_value("Desktop Icon", icon.name,
+                            {"standard": 0, "hidden": 1, "owner": "Guest"},
+                            update_modified=False)
         escondidos.append(icon.label)
 
     frappe.cache.delete_key("desktop_icons")

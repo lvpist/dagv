@@ -12,4 +12,13 @@ frappe.ui.form.on("DAGV Area", {
 			query: "dagv.homescreen.module_link_query",
 		}));
 	},
+
+	// "Curso obrigatório" só faz sentido nas três VPs académicas, e essas já
+	// estão definidas. Nem `hidden` nem `depends_on` o tiravam do ecrã — o
+	// Frappe continua a desenhar campos escondidos para quem é System Manager,
+	// que é justamente quem edita áreas. `toggle_display` é imperativo e não
+	// depende de nada disso: quem já tem curso continua a vê-lo, os outros não.
+	refresh(frm) {
+		frm.toggle_display("required_course", !!frm.doc.required_course);
+	},
 });
