@@ -159,3 +159,121 @@ def sync():
     frappe.db.commit()
     frappe.clear_cache()
     return resultado
+
+
+# ---------------------------------------------------------------------------
+# Os formulários
+# ---------------------------------------------------------------------------
+# Enxugar a página levou a pessoa até "Fatura de Venda" em dois cliques — e aí
+# ela encontra o formulário de faturação de uma empresa: modelo de imposto,
+# centro de custo, moeda, condições de pagamento, endereço de entrega. Um DA
+# precisa de saber quem comprou, o quê, quanto e quando.
+#
+# A regra que torna isto seguro: **campo obrigatório nunca é escondido.** O
+# Frappe valida obrigatórios mesmo invisíveis, então esconder um sem valor por
+# omissão dá um formulário que não grava e não diz porquê. Aqui o obrigatório
+# fica sempre, mesmo que não esteja na lista.
+#
+# Quebras de coluna também nunca: escondê-las não junta as colunas, órfã o que
+# estava na segunda — já aconteceu na Tarefa, e o prazo desapareceu do ecrã.
+
+FORMS = {
+    # Financeiro
+    "Sales Invoice": ["customer", "posting_date", "due_date", "items",
+                      "grand_total", "outstanding_amount", "remarks"],
+    "Purchase Invoice": ["supplier", "posting_date", "due_date", "items",
+                         "grand_total", "outstanding_amount", "remarks"],
+    "Payment Entry": ["payment_type", "party_type", "party", "posting_date",
+                      "paid_amount", "mode_of_payment", "reference_no", "remarks"],
+    "Journal Entry": ["voucher_type", "posting_date", "accounts", "user_remark"],
+    # Produtos
+    "Item": ["item_code", "item_name", "item_group", "stock_uom", "description",
+             "image", "standard_rate", "is_stock_item", "opening_stock"],
+    "Stock Entry": ["stock_entry_type", "posting_date", "items", "remarks"],
+    "Stock Reconciliation": ["purpose", "posting_date", "items"],
+    "Warehouse": ["warehouse_name", "parent_warehouse", "company"],
+    # Quem compra e quem fornece
+    "Customer": ["customer_name", "customer_group", "mobile_no", "email_id"],
+    "Supplier": ["supplier_name", "supplier_group", "mobile_no", "email_id"],
+    # Parcerias
+    "Lead": ["lead_name", "company_name", "email_id", "mobile_no", "status"],
+    "Contact": ["first_name", "last_name", "email_ids", "phone_nos", "company_name"],
+    # Demandas
+    "Issue": ["subject", "raised_by", "status", "priority", "description"],
+}
+
+# Nenhum campo de layout se esconde. Esconder uma Quebra de Coluna órfã o que
+# estava na segunda coluna; esconder uma Quebra de Separador leva o separador
+# inteiro — o formulário de Item ficou com 184 controlos e **nenhum visível**.
+# O Frappe já recolhe sozinho a secção cujos campos estão todos escondidos, que
+# é o efeito que se queria.
+NUNCA_ESCONDER = {"Column Break", "Section Break", "Tab Break"}
+
+
+def _repor_layout(doctype):
+    """Desfazer o estrago da versão anterior, que escondia quebras de layout."""
+    meta = frappe.get_meta(doctype)
+    layout = {f.fieldname for f in meta.fields if f.fieldtype in NUNCA_ESCONDER}
+    for ps in frappe.get_all(
+        "Property Setter",
+        filters={"doc_type": doctype, "property": "hidden", "field_name": ["in", list(layout)]},
+        pluck="name",
+    ):
+        frappe.delete_doc("Property Setter", ps, force=1, ignore_permissions=True)
+
+
+def lean_form(doctype):
+    from frappe.custom.doctype.property_setter.property_setter import make_property_setter
+
+    if doctype not in FORMS or not frappe.db.exists("DocType", doctype):
+        return None
+
+    _repor_layout(doctype)
+    frappe.clear_cache(doctype=doctype)
+
+    manter = set(FORMS[doctype])
+    meta = frappe.get_meta(doctype)
+    encontrados = {f.fieldname for f in meta.fields}
+    escondidos, obrigatorios_extra = [], []
+
+    for field in meta.fields:
+        if field.fieldname in manter or field.hidden:
+            continue
+        if field.fieldtype in NUNCA_ESCONDER:
+            continue
+        if field.reqd:
+            # Obrigatório e **calculado** pode sair: o ERPNext preenche-o
+            # sozinho e o utilizador nunca lhe toca (base_grand_total,
+            # plc_conversion_rate). Obrigatório que a pessoa tem de preencher
+            # fica, mesmo fora da lista — esconder um desses dá um formulário
+            # que não grava e não explica porquê.
+            if field.read_only:
+                make_property_setter(doctype, field.fieldname, "hidden", 1, "Check",
+                                     validate_fields_for_doctype=False)
+                escondidos.append(field.fieldname)
+            else:
+                obrigatorios_extra.append(field.fieldname)
+            continue
+        make_property_setter(doctype, field.fieldname, "hidden", 1, "Check",
+                             validate_fields_for_doctype=False)
+        escondidos.append(field.fieldname)
+
+    frappe.clear_cache(doctype=doctype)
+    return {
+        "doctype": doctype,
+        "escondidos": len(escondidos),
+        "visiveis": len(manter & encontrados) + len(obrigatorios_extra),
+        "obrigatorios_mantidos": obrigatorios_extra,
+        "nao_existem": sorted(manter - encontrados),
+    }
+
+
+def sync_forms():
+    resultado = []
+    for doctype in FORMS:
+        r = lean_form(doctype)
+        if r:
+            resultado.append(r)
+    frappe.db.commit()
+    frappe.clear_cache()
+    return resultado
