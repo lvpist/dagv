@@ -515,6 +515,7 @@ def build_index():
     from dagv.work import sync as sync_work
 
     from dagv.approvals import configure_invites
+    from dagv.erp_lean import sync as sync_erp_lean
     from dagv.homescreen import sync as sync_homescreen
     from dagv.portal import sync as sync_portal
 
@@ -524,6 +525,9 @@ def build_index():
     sync_forms()
     configure_invites()
     sync_portal()
+    # As páginas do ERPNext são reescritas pelo migrate, por isso a limpeza tem
+    # de correr depois dele — senão dura até ao próximo deploy.
+    sync_erp_lean()
     # Por último: as pastas dependem das áreas, dos papéis e das permissões que
     # tudo acima acabou de assentar.
     sync_homescreen()

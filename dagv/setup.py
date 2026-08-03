@@ -130,7 +130,11 @@ DAGV_WORKSPACE = "DAGV"
 
 # Served from the site's own files rather than an external CDN, so branding
 # never depends on someone else's server staying up.
-DAGV_LOGO = "/files/dagv-logo.png"
+# O brasão compacto, não o logótipo estendido com texto: um ícone de 32 px com
+# palavras dentro é uma mancha. O ficheiro original é webp, convertido para PNG
+# porque o favicon ainda encontra navegadores que não lêem webp.
+DAGV_LOGO = "/files/dagv-icon-512.png"
+DAGV_FAVICON = "/files/dagv-favicon-64.png"
 
 
 def brand_the_site():
@@ -146,10 +150,11 @@ def brand_the_site():
             applied["navbar"] = DAGV_LOGO
 
     web = frappe.get_single("Website Settings")
-    for field in ("favicon", "app_logo", "banner_image"):
+    for field, valor in (("favicon", DAGV_FAVICON), ("app_logo", DAGV_LOGO),
+                         ("banner_image", DAGV_LOGO)):
         if web.meta.get_field(field):
-            setattr(web, field, DAGV_LOGO)
-            applied[field] = DAGV_LOGO
+            setattr(web, field, valor)
+            applied[field] = valor
     web.flags.ignore_permissions = True
     web.save()
 
